@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('修改设备信息')" />
+    <link th:href="@{/css/timepicker.css}" rel="stylesheet"/>
+    <style type="text/css">
+        .image {
+            width: 200px;
+            height: 200px;
+        }
+
+        .scheme {
+            width: 437px;
+            height: 324px;
+        }
+
+        .span {
+            width: 80px;
+            height: 30px;
+            text-align: center;
+            padding-top: 7px;
+            float: left;
+            border: 1px solid #9ea6b9;
+        }
+
+        .time {
+            width: 40px;
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+        }
+
+        .br {
+            border-right: 1px dashed red;
+        }
+
+        .bt {
+            border-top: 1px dashed red;
+        }
+
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-user-edit" th:object="${device}">
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            <li id="nav-1" class="active">
+                <a data-toggle="tab" href="#tab-1" aria-expanded="true">设备信息</a>
+            </li>
+            <li id="nav-2" class="">
+                <a data-toggle="tab" href="#tab-2" aria-expanded="false">功能设置</a>
+            </li>
+            <li id="nav-3" class="">
+                <a data-toggle="tab" href="#tab-3" aria-expanded="false">通讯与端口</a>
+            </li>
+            <li id="nav-4" class="">
+                <a data-toggle="tab" href="#tab-4" aria-expanded="false">设备运行信息</a>
+            </li>
+            <li id="nav-5" class="">
+                <a data-toggle="tab" href="#tab-5" aria-expanded="false">接线图</a>
+            </li>
+            <li id="nav-6" class="" shiro:hasAllPermissions="door:device:manager">
+                <a data-toggle="tab" href="#tab-6" aria-expanded="false">管理员</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane in active">
+                <div class="panel-body">
+                    <input name="positionId" type="hidden" th:field="*{positionId}" id="treeId"/>
+                    <input name="id" th:field="*{id}" type="hidden">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="col-sm-4 control-label"></label>
+                            <div class="col-sm-6">
+                                <div class="user-info-head action">
+                                    <img class="image" th:src="(*{image} == null) ? @{/img/default.jpg} : @{*{image}}" ></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label is-required">设备名称：</label>
+                                <div class="col-sm-7">
+                                    <input id="name" name="name" class="form-control" type="text" th:field="*{name}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label is-required">安装位置：</label>
+                                <div class="col-sm-7">
+                                    <div class="input-group">
+                                        <input name="positionName" onclick="selectPositionTree()" id="treeName" type="text" placeholder="选择安装位置" class="form-control" th:field="*{positionName}" required>
+                                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">SN：</label>
+                                <div class="col-sm-7">
+                                    <input name="sn" class="form-control" type="text" th:field="*{sn}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">设备型号：</label>
+                                <div class="col-sm-7">
+                                    <input id="model" name="model" class="form-control" type="text" th:value="${device.model}+' '+${device.comment}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">控制端口：</label>
+                                <div class="col-sm-7">
+                                    <input id="controlPort" name="controlPort" class="form-control" type="text" th:value="'第'+*{controlPort}+'端口'" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">版本号：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:field="*{ver}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <div class="col-sm-5">
+                                </div>
+                                <div class="col-sm-7">
+                                    <a class="btn btn-success btn-sm" onclick="submitHandler()" shiro:hasPermission="door:device:edit">
+                                        <i class="fa fa-save"></i> 保存
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr style="border:1px dashed #000">
+                    <div name="control" class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">设备卡容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="cardCapacity" class="form-control" type="text" th:field="*{cardCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">已用容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="cardUsed" class="form-control" type="text" th:field="*{cardUsed}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="control" class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">记录总容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="sysCapacity" class="form-control" type="text" th:value="${device.clockCapacity}+${device.buttonCapacity}+${device.doorCapacity}+${device.softwareCapacity}+${device.alarmCapacity}+${device.sysCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">已使用容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="sysUsed" class="form-control" type="text" th:value="${device.clockUsed}+${device.buttonUsed}+${device.doorUsed}+${device.softwareUsed}+${device.alarmUsed}+${device.sysUsed}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="face" class="row" style="display: none">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">人脸算法版本：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:field="*{verFace}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">人脸容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:value="${device.faceUsed}+'/'+${device.faceCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="fp" class="row" style="display: none">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">指纹算法版本：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:field="*{verFinger}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">指纹容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:value="${device.fpUsed}+'/'+${device.fpCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="faceFp" class="row" style="display: none">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">用户容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:value="${device.userUsed}+'/'+${device.userCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">打卡记录容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:value="${device.clockUsed}+'/'+${device.clockCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="faceFp" class="row" style="display: none">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">系统记录容量：</label>
+                                <div class="col-sm-7">
+                                    <input name="ver" class="form-control" type="text" th:value="${device.sysUsed}+'/'+${device.sysCapacity}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">出厂日期：</label>
+                                <div class="col-sm-7">
+                                    <input name="delivery" class="form-control" type="text" th:field="*{delivery}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-heading">
+                        <div class="btn-group-sm" role="group">
+                            <a class="btn btn-info btn-sm" onclick="closeAlarm()" shiro:hasPermission="door:device:closeAlarm">
+                                解除所有报警
+                            </a>
+                            <a class="btn btn-danger btn-sm" onclick="saveInit()" shiro:hasPermission="door:device:init" style="float: right">
+                                初始化设备
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-2" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">开门时长：</label>
+                                <div class="col-sm-5">
+                                    <input id="keepTime" name="keepTime" class="form-control" th:field="*{keepTime}" required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <a class="btn btn-default btn-sm" onclick="saveKt()" shiro:hasPermission="door:device:writeRrt">
+                                        <i class="fa fa-check"></i> 提交
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">存储方式：</label>
+                                <div class="col-sm-5">
+                                    <select id="recordMode" name="recordMode" class="form-control m-b" th:with="type=${@dict.getType('snk_record_mode')}">
+                                        <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{recordMode}"></option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3">
+                                    <a class="btn btn-default btn-sm" onclick="saveRm()" shiro:hasPermission="door:device:writeRm">
+                                        <i class="fa fa-check"></i> 提交
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">设备有效期：</label>
+                                <div class="col-sm-5">
+                                    <input id="deadLine" name="deadLine" class="form-control" type="text" th:field="*{deadLine}" required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <a class="btn btn-default btn-sm" onclick="saveDl()" shiro:hasPermission="door:device:writeDl">
+                                        <i class="fa fa-check"></i> 提交
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">通讯密码：</label>
+                                <div class="col-sm-5">
+                                    <input id="pwd" name="pwd" class="form-control" type="password" th:value="*{pwd}" minlength="8" maxlength="8" required>
+                                </div>
+                                <div class="col-sm-3">
+                                    <a class="btn btn-default btn-sm" onclick="savePwd()" shiro:hasPermission="door:device:writePwd">
+                                        <i class="fa fa-check"></i> 提交
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->
+                    <div name="control" class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-7 control-label">启用出门按钮：</label>
+                                <div class="col-sm-5">
+                                    <label class="toggle-switch switch-solid">
+                                        <input type="checkbox" id="useButton" th:checked="*{useButton}" onclick="savePbs()">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-8 control-label">长按出门按钮开关5秒保持常开：</label>
+                                <div class="col-sm-4">
+                                    <label class="toggle-switch switch-solid">
+                                        <input type="checkbox" id="normallyOpen" th:checked="*{normallyOpen}" onclick="savePbs()">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div name="control" class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-7 control-label">防潜回：</label>
+                                <div class="col-sm-5">
+                                    <label class="toggle-switch switch-solid">
+                                        <input type="checkbox" id="antiBack" th:checked="*{antiBack}" onclick="saveAp()">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr style="border:1px dashed #000">
+                    <div class="row">
+                        <div class="col-sm-1"></div>
+                        <div class="col-sm-3">
+                            <select id="timeGroup" class="form-control m-b" onchange="selectTimeGroup()">
+                                <option th:each="time:${times}" th:value="${time.idx}" th:text="${time.name}"></option>
+                            </select>
+                        </div>
+                        <div class="col-sm-2" style="width: 80px; padding-top: 5px;">
+                            <a class="btn btn-success btn-xs" onclick="addTg()" shiro:hasPermission="door:device:writeTg">
+                                <i class="fa fa-plus" title="新增时段"></i>
+                            </a>
+                            <a id="delTg" class="btn btn-danger btn-xs" onclick="delTg()" shiro:hasPermission="door:device:writeTg" style="display: none">
+                                <i class="fa fa-remove" title="删除时段"></i>
+                            </a>
+                        </div>
+                        <div class="col-sm-4">
+                            <input id="timeId" type="hidden">
+                            <div class="form-group">
+                                <label class="col-sm-6 control-label is-required">时段名称：</label>
+                                <div class="col-sm-6">
+                                    <input id="timeName" class="form-control" onchange="checkUnique()" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-2">
+                            <a class="btn btn-warning btn-sm" onclick="clearTg()" shiro:hasPermission="door:device:clearTg">
+                                清空
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-1"></div>
+                        <div class="col-sm-10">
+                            <span class="span bg-primary" onclick="setClass(0)">星期一</span>
+                            <span class="span" onclick="setClass(1)">星期二</span>
+                            <span class="span" onclick="setClass(2)">星期三</span>
+                            <span class="span" onclick="setClass(3)">星期四</span>
+                            <span class="span" onclick="setClass(4)">星期五</span>
+                            <span class="span" onclick="setClass(5)">星期六</span>
+                            <span class="span" onclick="setClass(6)">星期日</span>
+                        </div>
+                        <div class="col-sm-1"></div>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <table class="col-sm-12" style="text-align: center;">
+                            <tr>
+                                <td class="col-sm-3 br">
+                                    <label>时间段1</label>
+                                </td>
+                                <td class="col-sm-3 br">
+                                    <label>时间段2</label>
+                                </td>
+                                <td class="col-sm-3 br">
+                                    <label>时间段3</label>
+                                </td>
+                                <td class="col-sm-3">
+                                    <label>时间段4</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="br">
+                                    <input id="time0B" type="text" class="time" value="00:00" disabled> - <input id="time0E" type="text" class="time" value="23:59" disabled>
+                                </td>
+                                <td class="br">
+                                    <input id="time1B" type="text" class="time" value="00:00" disabled> - <input id="time1E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                                <td class="br">
+                                    <input id="time2B" type="text" class="time" value="00:00" disabled> - <input id="time2E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                                <td>
+                                    <input id="time3B" type="text" class="time" value="00:00" disabled> - <input id="time3E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="br"><br></td>
+                                <td class="br"></td>
+                                <td class="br"></td>
+                            </tr>
+                            <tr>
+                                <td class="br bt"><br></td>
+                                <td class="br bt"></td>
+                                <td class="br bt"></td>
+                                <td class="bt"></td>
+                            </tr>
+                            <tr>
+                                <td class="br">
+                                    <label>时间段5</label>
+                                </td>
+                                <td class="br">
+                                    <label>时间段6</label>
+                                </td>
+                                <td class="br">
+                                    <label>时间段7</label>
+                                </td>
+                                <td>
+                                    <label>时间段8</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="br">
+                                    <input id="time4B" type="text" class="time" value="00:00" disabled> - <input id="time4E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                                <td class="br">
+                                    <input id="time5B" type="text" class="time" value="00:00" disabled> - <input id="time5E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                                <td class="br">
+                                    <input id="time6B" type="text" class="time" value="00:00" disabled> - <input id="time6E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                                <td>
+                                    <input id="time7B" type="text" class="time" value="00:00" disabled> - <input id="time7E" type="text" class="time" value="00:00" disabled>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <br>
+                    <br>
+                    <div id="saveTg" class="btn-group-sm" style="text-align: center; display: none">
+                        <a class="btn btn-success" onclick="saveTg()" shiro:hasPermission="door:device:writeTg">
+                            <i class="fa fa-save"></i> 保存
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-3" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label is-required">MAC地址：</label>
+                                <div class="col-sm-7">
+                                    <input name="mac" class="form-control" type="text" th:field="*{mac}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label is-required">IP地址：</label>
+                                <div class="col-sm-7">
+                                    <input id="ip" name="ip" class="form-control" type="text" th:field="*{ip}" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">子网掩码：</label>
+                                <div class="col-sm-7">
+                                    <input id="ipMask" name="ipMask" class="form-control" type="text" th:field="*{ipMask}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">网关地址：</label>
+                                <div class="col-sm-7">
+                                    <input id="ipGateway" name="ipGateway" class="form-control" type="text" th:field="*{ipGateway}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">本地TCP端口：</label>
+                                <div class="col-sm-7">
+                                    <input id="tcpPort" name="tcpPort" class="form-control" type="text" th:field="*{tcpPort}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">本地UDP端口：</label>
+                                <div class="col-sm-7">
+                                    <input id="udpPort" name="udpPort" class="form-control" type="text" th:field="*{udpPort}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">服务器IP：</label>
+                                <div class="col-sm-7">
+                                    <input id="serverIp" name="serverIp" class="form-control" type="text" th:field="*{serverIp}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">服务器端口：</label>
+                                <div class="col-sm-7">
+                                    <input id="serverPort" name="serverPort" class="form-control" type="text" th:field="*{serverPort}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">DNS：</label>
+                                <div class="col-sm-7">
+                                    <input id="dns" name="dns" class="form-control" type="text" th:field="*{dns}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">备用DNS：</label>
+                                <div class="col-sm-7">
+                                    <input id="dnsBak" name="dnsBak" class="form-control" type="text" th:field="*{dnsBak}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">服务器地址：</label>
+                                <div class="col-sm-7">
+                                    <input id="serverAddress" name="serverAddress" class="form-control" type="text" th:field="*{serverAddress}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-heading">
+                    <div class="btn-group-sm" role="group" style="text-align: center">
+                        <a class="btn btn-success" onclick="saveTCP()" shiro:hasPermission="door:device:writeTCP">
+                            <i class="fa fa-save"></i> 保存
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-4" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">设备运行天数：</label>
+                                <div class="col-sm-7">
+                                    <input name="runDay" class="form-control" type="text" th:field="*{runDay}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">上电时间：</label>
+                                <div class="col-sm-7">
+                                    <input name="startTime" class="form-control" type="text" th:field="*{startTime}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">格式化次数：</label>
+                                <div class="col-sm-7">
+                                    <input name="formatCount" class="form-control" type="text" th:field="*{formatCount}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">看门狗复位次数：</label>
+                                <div class="col-sm-7">
+                                    <input name="restartCount" class="form-control" type="text" th:field="*{restartCount}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div name="control" class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">系统温度：</label>
+                                <div class="col-sm-7">
+                                    <input name="temperature" class="form-control" type="text" th:value="'+'+*{temperature}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-5 control-label">电压：</label>
+                                <div class="col-sm-7">
+                                    <input name="voltage" class="form-control" type="text" th:field="*{voltage}" disabled>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-5" class="tab-pane">
+                <div class="panel-body" style="text-align: center">
+                    <div class="row">
+                        <img class="scheme" th:src="(*{conScheme} == null) ? @{/img/default.jpg} : @{*{conScheme}}" data-toggle="modal" data-target="#imgModal">
+                    </div>
+                    <div class="row">
+                        <br>
+                        <span style="color: red">点击图片可查看大图<br/>最大化窗口点击图片可查看原图</span>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-6" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="btn-group-sm" id="toolbar1" role="group">
+                                <a class="btn btn-success btn-xs" onclick="addAll()" title="添加全部" style="padding-bottom: 5px"> >> </a>
+                                <a class="btn btn-success btn-xs" onclick="add()" title="添加"> &nbsp;>&nbsp; </a>
+                            </div>
+                            <div class="col-xs-12 select-table table-striped">
+                                <table id="bootstrap-table1"></table>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="btn-group-sm" id="toolbar2" role="group">
+                                <a class="btn btn-success btn-xs" onclick="del()" title="删除"> &nbsp;<&nbsp; </a>
+                                <a class="btn btn-success btn-xs" onclick="delAll()" title="删除全部"> << </a>
+                            </div>
+                            <div class="col-xs-12 select-table table-striped">
+                                <table id="bootstrap-table2" style="overflow-y: auto; max-height: 400px"></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>
+<!-- 显示大图部分 -->
+<div class="modal text-center" id="imgModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-content">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span>
+        </button>
+        <img th:src="(*{device.conScheme} == null) ? @{/img/default.jpg} : @{*{device.conScheme}}" width="100%" height="100%">
+    </div>
+</div>
+<th:block th:include="include :: footer" />
+    <script th:src="@{/js/timepicker.js}"></script>
+    <script th:inline="javascript">
+        var prefix = ctx + "door/device";
+        var param = [[${device}]];
+        var globalTg = {};
+
+        $(function(){
+            // 设备类型
+            var deviceType = [[${device.deviceType}]];
+            // 设置保持开门时长权限
+            var writeKt = [[${@permission.hasPermi('door:device:writeRrt')}]];
+            if (writeKt == "hidden") {
+                $("#keepTime").attr("disabled", "disabled");
+            }
+            // 设置设备有效期权限
+            var writeDl = [[${@permission.hasPermi('door:device:writeDl')}]];
+            if (writeDl == "hidden") {
+                $("#deadLine").attr("disabled", "disabled");
+            }
+            // 设置存储方式权限
+            var writeRm = [[${@permission.hasPermi('door:device:writeRm')}]];
+            if (writeRm == "hidden") {
+                $("#recordMode").attr("disabled", "disabled");
+            }
+            // 设置出门按钮权限
+            var writePbs = [[${@permission.hasPermi('door:device:writePbs')}]];
+            if (writePbs == "hidden") {
+                $("#useButton").attr("disabled", "disabled");
+                $("#normallyOpen").attr("disabled", "disabled");
+            }
+            // 设置防潜回权限
+            var writeAp = [[${@permission.hasPermi('door:device:writeAp')}]];
+            if (writeAp == "hidden") {
+                $("#antiBack").attr("disabled", "disabled");
+            }
+            // 设置密码权限
+            var writePwd = [[${@permission.hasPermi('door:device:writePwd')}]];
+            if (writePwd == "hidden") {
+                $("#pwd").attr("disabled", "disabled");
+            }
+            // 设置TCP参数权限
+            var writeTcp = [[${@permission.hasPermi('door:device:writeTcp')}]];
+            if (writeTcp == "hidden") {
+                $("#ip").attr("disabled", "disabled");
+                $("#ipMask").attr("disabled", "disabled");
+                $("#ipGateway").attr("disabled", "disabled");
+                $("#tcpPort").attr("disabled", "disabled");
+                $("#serverIp").attr("disabled", "disabled");
+                $("#serverPort").attr("disabled", "disabled");
+            }
+            if (deviceType == "1") {
+                $("#udpPort").attr("disabled", "disabled");
+            } else {
+                $("div[name=control]").hide();
+                $("div[name=faceFp]").show();
+                if ("2" == deviceType) {    // 人脸机
+                    $("div[name=face]").show();
+                } else if ("3" == deviceType) { // 指纹机
+                    $("div[name=fp]").show();
+                }
+                $("#tcpPort").attr("disabled", "disabled");
+            }
+
+            // 初始化时间控件
+            for (var i = 0; i < 8; i++) {
+                $("#time"+ i +"B").hunterTimePicker();
+                $("#time"+ i +"E").hunterTimePicker();
+            }
+            selectTimeGroup();
+        });
+
+        $("#form-user-edit").validate({
+            onkeyup: false,
+            rules: {
+                name: {
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function () {
+                                return $("#id").val();
+                            },
+                            "name": function () {
+                                return $.common.trim($("#name").val());
+                            }
+                        },
+                        dataFilter: function (data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                keepTime: {
+                    digits: true,
+                    min: 1,
+                    max: 65535
+                },
+                deadLine: {
+                    digits: true,
+                    min: 0,
+                    max: 65535
+                },
+                tcpPort: {
+                    digits: true,
+                    min: 1024,
+                    max: 65535
+                },
+                udpPort: {
+                    digits: true,
+                    min: 1024,
+                    max: 65535
+                },
+                serverPort: {
+                    digits: true,
+                    min: 1024,
+                    max: 65535
+                }
+            },
+            messages: {
+                "name": {
+                    remote: "设备名称已存在"
+                }
+            },
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var data = {"id": $("#id").val(),
+                            "name": $("#name").val(),
+                            "positionId": $("#treeId").val()};
+                $.operate.save(prefix + "/edit", data);
+            }
+        }
+
+        /*用户管理-修改-选择部门树*/
+        function selectPositionTree() {
+            var positionId = $.common.isEmpty($("#treeId").val()) ? "1" : $("#treeId").val();
+            var url = ctx + "door/device/position/selectPositionTree/" + positionId;
+            var options = {
+                title: '选择安装位置',
+                width: "380",
+                url: url,
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero){
+            var tree = layero.find("iframe")[0].contentWindow.$._tree;
+            if ($.tree.notAllowParents(tree)) {
+                var body = layer.getChildFrame('body', index);
+                $("#treeId").val(body.find('#treeId').val());
+                $("#treeName").val(body.find('#treeName').val());
+                layer.close(index);
+            }
+        }
+
+        function saveKt() {
+            if ($("#form-user-edit").validate().element($("#keepTime"))) {
+                var keepTime = Math.round($("#keepTime").val());
+                if (param.keepTime == keepTime) {
+                    $.modal.msgWarning("【开门保持时长】未发生变化，不允许提交");
+                    return;
+                }
+                param.param = keepTime;
+                operate("WRITE_RELAY_RELEASE_TIME");
+                param.keepTime = keepTime;
+            }
+        }
+
+        function saveRm() {
+            var recordMode = $("#recordMode").val();
+            if (param.recordMode == recordMode) {
+                $.modal.msgWarning("【存储方式】未发生变化，不允许提交");
+                return;
+            }
+            param.param = recordMode;
+            operate("WRITE_RECORD_MODE");
+            param.recordMode = recordMode;
+        }
+
+        function saveDl() {
+            if ($("#form-user-edit").validate().element($("#deadLine"))) {
+                var deadLine = Math.round($("#deadLine").val());
+                if (param.deadLine == deadLine) {
+                    $.modal.msgWarning("【设备有效期】未发生变化，不允许提交");
+                    return;
+                }
+                param.param = deadLine;
+                operate("WRITE_DEAD_LINE");
+                param.deadLine = deadLine;
+            }
+        }
+
+        function saveTCP() {
+            if ($.validate.form()) {
+                param.param = {"mac": $("#mac").val(),
+                         "ip": $("#ip").val(),
+                         "ipMask": $("#ipMask").val(),
+                         "ipGateway": $("#ipGateway").val(),
+                         "tcpPort": $("#tcpPort").val(),
+                         "udpPort": $("#udpPort").val(),
+                         "serverIp": $("#serverIp").val(),
+                         "serverPort": $("#serverPort").val(),
+                         "dns": $("#dns").val(),
+                         "dnsBak": $("#dnsBak").val(),
+                         "serverAddress": $("#serverAddress").val()};
+                operate("WRITE_TCP_SETTING");
+            }
+        }
+
+        function savePbs() {
+            param.param = {"use": $("input[id='useButton']").is(':checked'),
+                     "normallyOpen": $("input[id='normallyOpen']").is(':checked')};
+            operate("WRITE_PUSH_BUTTON_SETTING");
+        }
+
+        function saveAp() {
+            param.param = $("input[id='antiBack']").is(':checked');
+            operate("WRITE_ANTI_PASSBACK");
+        }
+
+        function savePwd() {
+            if ($("#form-user-edit").validate().element($("#pwd"))) {
+                var pwd = $("#pwd").val();
+                if (param.pwd == pwd) {
+                    $.modal.msgWarning("【通讯密码】未发生变化，不允许提交");
+                    return;
+                }
+                param.param = pwd;
+                operate("WRITE_CONNECT_PASSWORD");
+                param.pwd = pwd;
+            }
+        }
+
+        function saveInit() {
+            layer.prompt({title: '请输入登录密码，并确认', formType: 1}, function(pass, index){
+                layer.close(index);
+                $.ajax({
+                    url: ctx + "system/user/profile/checkPassword",
+                    type: "get",
+                    dataType: "json",
+                    data: {password: pass},
+                    success: function(result) {
+                        if (result) {
+                            $.modal.confirm("确定要初始化设备吗？", function() {
+                                operate("FORMAT_CONTROLLER");
+                            });
+                        } else {
+                            $.modal.msgError("密码错误");
+                        }
+                    }
+                });
+            });
+        }
+
+        function operate(operation) {
+            $.modal.open("操作记录", prefix + "/operate?operation=" + operation, null, null, null, true);
+        }
+
+        $(function() {
+            var options = {
+                id: "bootstrap-table1",
+                toolbar: "toolbar1",
+                url: ctx + "door/device/manager/userList/" + $("#id").val(),
+                showSearch: false,
+                showRefresh: false,
+                showColumns: false,
+                showToggle: false,
+                clickToSelect: true,
+                search: true,
+                uniqueId: "userId",
+                modalName: "可选用户",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field : 'userName',
+                    title : '用户姓名'
+                },
+                {
+                    field: 'dept.deptName',
+                    title: '部门'
+                }]
+            };
+            $.table.init(options);
+        });
+
+        $(function() {
+            var options = {
+                id: "bootstrap-table2",
+                toolbar: "toolbar2",
+                url: ctx + "door/device/manager/list?deviceId=" + $("#id").val(),
+                showSearch: false,
+                showRefresh: false,
+                showColumns: false,
+                showToggle: false,
+                clickToSelect: true,
+                pagination: false,
+                search: true,
+                uniqueId: "id",
+                modalName: "已选用户",
+                columns: [{
+                    checkbox: true
+                },
+                {
+                    field : 'userName',
+                    title : '用户姓名'
+                },
+                {
+                    field: 'deptName',
+                    title: '部门'
+                }]
+            };
+            $.table.init(options);
+        });
+
+        function add() {
+            var table1 = $("#bootstrap-table1").bootstrapTable("getSelections");
+            if (table1.length == 0) {
+                $.modal.alertWarning("请至少选择一个人员");
+                return;
+            }
+            addManager(table1);
+        }
+
+        function del() {
+            var table2 = $("#bootstrap-table2").bootstrapTable("getSelections");
+            if (table2.length == 0) {
+                $.modal.alertWarning("请至少选择一个人员");
+                return;
+            }
+            delManager(table2);
+        }
+
+        function addAll() {
+            var table1 = $("#bootstrap-table1").bootstrapTable("getData");
+            if (table1.length == 0) {
+                $.modal.alertWarning("没有可以添加的人员");
+                return;
+            }
+            addManager(table1);
+        }
+
+        function delAll() {
+            var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+            if (table2.length == 0) {
+                $.modal.alertWarning("没有可以删除的人员");
+                return;
+            }
+            delManager(table2);
+        }
+
+        function addManager(table1) {
+            var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+            var deviceId = $("#id").val();
+            var managerList = [];
+            $.each(table1, function (i, tab1) {
+                var isExists = false;
+                $.each(table2, function (j, tab2) {
+                    if (tab1.userId == tab2.userId) {
+                        isExists = true;
+                        return false;
+                    }
+                });
+                if (!isExists) {
+                    var manager = {"userId": tab1.userId,
+                        "deviceId": deviceId};
+                    managerList.push(manager);
+                }
+            });
+            if (managerList.length > 0) {
+                $.ajax({
+                    url : ctx + "door/device/manager/add",
+                    type : "POST",
+                    contentType: "application/json",
+                    data : JSON.stringify(managerList),
+                    async : false,
+                    success : function(data) {
+                        $("#bootstrap-table1").bootstrapTable('refresh');
+                        $("#bootstrap-table2").bootstrapTable('refresh');
+                    }
+                });
+            }
+        }
+
+        function delManager(table2) {
+            var ids = [];
+            $.each(table2, function(i, obj) {
+               ids.push(obj.id);
+            });
+            $.ajax({
+                url : ctx + "door/device/manager/remove",
+                type : "POST",
+                dataType: "json",
+                data : {"ids": ids.join()},
+                async : false,
+                success : function(data) {
+                    $("#bootstrap-table1").bootstrapTable('refresh');
+                    $("#bootstrap-table2").bootstrapTable('refresh');
+                }
+            });
+        }
+
+        var addFlag = false;
+        function addTg() {
+            $(".time").removeAttr("disabled");
+            $(".time").val("00:00");
+            var idx = parseInt($("#timeGroup option:last")[0].value) + 1;
+            $("#timeName").val("开门时段" + (idx < 10 ? "0" + idx : idx));
+            $("#timeName").removeClass("disabled");
+            $("#saveTg").show();
+            $("#delTg").hide();
+            addFlag = true;
+            globalTg = {};
+            initTimes(0);
+        }
+
+        function selectTimeGroup() {
+            $("#timeName").val($("#timeGroup option:checked").text());
+            var idx = $("#timeGroup").val();
+            if (idx == 1) {
+                $(".time").attr("disabled", "disabled");
+                $("#timeName").attr("disabled", "disabled");
+                $("#saveTg").hide();
+                $("#delTg").hide();
+                globalTg = {};
+                addFlag = false;
+                initTimes(0);
+            } else {
+                $.ajax({
+                    url: ctx + "door/device/timeslot/" + [[${device.sn}]] + "/" + idx,
+                    type: "GET",
+                    data: null,
+                    success: function(result) {
+                        if ($.common.isEmpty(result)) {
+                            $.modal.alertWarning("数据已被删除，请刷新页面");
+                            return;
+                        }
+                        globalTg = JSON.parse(result.timeGroup);
+                        addFlag = false;
+                        $(".time").removeAttr("disabled");
+                        $("#timeName").removeAttr("disabled");
+                        $("#saveTg").show();
+                        $("#delTg").show();
+                        initTimes(0);
+                    }
+                });
+            }
+        }
+
+        function setClass(idx) {
+            setGlobalTg();
+            initTimes(idx);
+        }
+
+        function initTimes(idx) {
+            $(".span").removeClass("bg-primary");
+            $(".span")[idx].className += " bg-primary";
+            var time;
+            switch (idx) {
+                case 0:
+                    time = globalTg.time0;
+                    break;
+                case 1:
+                    time = globalTg.time1;
+                    break;
+                case 2:
+                    time = globalTg.time2;
+                    break;
+                case 3:
+                    time = globalTg.time3;
+                    break;
+                case 4:
+                    time = globalTg.time4;
+                    break;
+                case 5:
+                    time = globalTg.time5;
+                    break;
+                case 6:
+                    time = globalTg.time6;
+                    break;
+                case 7:
+                    time = globalTg.time7;
+                    break;
+            }
+            if (!$.common.isEmpty(time)) {
+                $.each(time, function(index, obj) {
+                    if (!$.common.isEmpty(obj.start)) {
+                        $("#time" + index + "B").val(obj.start);
+                    }
+                    if (!$.common.isEmpty(obj.end)) {
+                        $("#time" + index + "E").val(obj.end);
+                    }
+                });
+            } else {
+                for (var i = 0; i < 8; i++) {
+                    $("#time" + i + "B").val("00:00");
+                    if (i == 0 && $("#timeGroup").val() == 1 && addFlag == false) {
+                        $("#time" + i + "E").val("23:59");
+                    } else {
+                        $("#time" + i + "E").val("00:00");
+                    }
+                }
+            }
+        }
+
+        function setGlobalTg() {
+            var timeGroup = [];
+            for (var i = 0; i < 8; i++) {
+                if ($("#time" + i + "B").val() == "00:00" && $("#time" + i + "E").val() == "00:00") {
+                    continue;
+                }
+                var timeJson = {"start": $("#time" + i + "B").val(), "end": $("#time" + i + "E").val()};
+                timeGroup.push(timeJson);
+            }
+            $.each($(".span"), function (index, obj) {
+                if (obj.classList.contains("bg-primary")) {
+                    switch (index) {
+                        case 0:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time0;
+                            } else {
+                                globalTg.time0 = timeGroup;
+                            }
+                            break;
+                        case 1:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time1;
+                            } else {
+                                globalTg.time1 = timeGroup;
+                            }
+                            break;
+                        case 2:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time2;
+                            } else {
+                                globalTg.time2 = timeGroup;
+                            }
+                            break;
+                        case 3:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time3;
+                            } else {
+                                globalTg.time3 = timeGroup;
+                            }
+                            break;
+                        case 4:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time4;
+                            } else {
+                                globalTg.time4 = timeGroup;
+                            }
+                            break;
+                        case 5:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time5;
+                            } else {
+                                globalTg.time5 = timeGroup;
+                            }
+                            break;
+                        case 6:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time6;
+                            } else {
+                                globalTg.time6 = timeGroup;
+                            }
+                            break;
+                        case 7:
+                            if ($.isEmptyObject(timeGroup)) {
+                                delete globalTg.time7;
+                            } else {
+                                globalTg.time7 = timeGroup;
+                            }
+                            break;
+                    }
+                }
+            });
+        }
+
+        function saveTg() {
+            setGlobalTg();
+            var timeName = $("#timeName").val();
+            if ($.common.isEmpty(timeName)) {
+                $.modal.alertError("时段名称必填");
+                return;
+            }
+            var idx;
+            if (addFlag) {  // 新增
+                if ($.isEmptyObject(globalTg)) {
+                    $.modal.alertError("无有效时段，不能保存");
+                    return;
+                }
+                $.ajax({
+                    url: ctx + "door/device/timeslot/maxIdx/" + [[${device.sn}]],
+                    async: false,
+                    type: "GET",
+                    data: null,
+                    success: function (result) {
+                        idx = result + 1;
+                        if (idx == 65) {
+                            $.modal.alertError("最多只能设置64个时段");
+                            return;
+                        }
+                        param.param = {"sn": [[${device.sn}]], "name": timeName, "idx": idx, "timeGroup": globalTg};
+                        operate("WRITE_TIME_GROUP");
+                        $("#timeGroup").append("<option value=" + idx + ">" + timeName + "</option>");
+                        $("#timeGroup").val(idx);
+                        $("#delTg").hide();
+                    }
+                });
+                addFlag = false;
+            } else {
+                idx = $("#timeGroup").val();
+                if ($.isEmptyObject(globalTg)) {
+                    $.modal.confirm("无有效时段，点击确认将删除此时段", function() {    // 删除
+                        param.param = {"sn": [[${device.sn}]], "idx": idx, "timeGroup": globalTg};
+                        operate("WRITE_TIME_GROUP");
+                        $("#timeGroup option[value=" + idx + "]").remove();
+                        selectTimeGroup();
+                    });
+                } else {    // 修改
+                    param.param = {"sn": [[${device.sn}]], "name": timeName, "idx": idx, "timeGroup": globalTg};
+                    operate("WRITE_TIME_GROUP");
+                }
+            }
+            addFlag = false;
+        }
+
+        function checkUnique() {
+            var timeName = $("#timeName").val();
+            if ("开门时段01" == timeName) {
+                $.modal.alertError("时段名称已存在");
+                $("#timeName").val(null);
+                return;
+            }
+            var uniqueParam = {"sn": [[${device.sn}]], "name": timeName};
+            if (!addFlag) {
+                uniqueParam.idx = $("#timeGroup").val();
+            }
+            $.ajax({
+                url: ctx + "door/device/timeslot/checkUnique",
+                async: false,
+                type: "POST",
+                dataType: "json",
+                data: uniqueParam,
+                success: function (result) {
+                    if ("1" == result) {
+                        $("#timeName").val(null);
+                        $.modal.alertError("时段名称已存在");
+                    }
+                }
+            });
+        }
+
+        function delTg() {
+            var idx = $("#timeGroup").val();
+            $.modal.confirm("确认要删除" + $("#timeGroup option:checked").text() + "？", function() {    // 删除
+                param.param = {"sn": [[${device.sn}]], "idx": idx, "timeGroup": {}};
+                operate("WRITE_TIME_GROUP");
+                $("#timeGroup option[value=" + idx + "]").remove();
+                selectTimeGroup();
+            });
+        }
+
+        function clearTg() {
+            $.modal.confirm("确认要清空所有开门时段？", function() {    // 删除
+                param.param = true;
+                operate("CLEAR_TIME_GROUP");
+                $("#timeGroup").val(1);
+                selectTimeGroup();
+                $("#timeGroup option[value != 1]").remove();
+            });
+        }
+        
+        function closeAlarm() {
+            operate("CLOSE_ALARM");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaHolidayMapper">
+
+    <resultMap type="CwaHoliday" id="CwaHolidayResult">
+        <result property="id"    column="id"    />
+        <result property="year"    column="year"    />
+        <result property="type"    column="type"    />
+        <result property="holiday"    column="holiday"    />
+        <result property="tbDate"    column="tb_date"    />
+        <result property="banDoor"    column="ban_door"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaHolidayVo">
+        select a.id, a.year, a.type, a.holiday, a.tb_date, a.ban_door, a.remark, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_holiday a
+    </sql>
+
+    <select id="selectCwaHolidayList" parameterType="CwaHoliday" resultMap="CwaHolidayResult">
+        <include refid="selectCwaHolidayVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="year != null"> and a.year = #{year}</if>
+            <if test="type != null and type != ''"> and a.type = #{type}</if>
+        </where>
+        order by a.year desc, a.type
+    </select>
+
+    <insert id="insertCwaHoliday" parameterType="CwaHoliday" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_holiday
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="year != null">year,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="holiday != null and holiday != ''">holiday,</if>
+            <if test="tbDate != null and tbDate != ''">tb_date,</if>
+            <if test="banDoor != null and banDoor != ''">ban_door,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="year != null">#{year},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="holiday != null and holiday != ''">#{holiday},</if>
+            <if test="tbDate != null and tbDate != ''">#{tbDate},</if>
+            <if test="banDoor != null and banDoor != ''">#{banDoor},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateCwaHoliday" parameterType="CwaHoliday">
+        update snk_cwa_holiday
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="year != null">year = #{year},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="holiday != null and holiday != ''">holiday = #{holiday},</if>
+            <if test="tbDate != null and tbDate != ''">tb_date = #{tbDate},</if>
+            ban_door = #{banDoor},
+            remark = #{remark},
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectCwaHolidayById" parameterType="Long" resultMap="CwaHolidayResult">
+        <include refid="selectCwaHolidayVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteCwaHolidayById" parameterType="Long">
+        update snk_cwa_holiday set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaHolidayByIds" parameterType="String">
+        update snk_cwa_holiday set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

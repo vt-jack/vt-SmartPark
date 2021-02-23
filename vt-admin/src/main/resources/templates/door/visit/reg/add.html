@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('来访登记')" />
+    <style type="text/css">
+        .photo {
+            width: 200px;
+            height: 200px;
+        }
+
+        .idPhoto {
+            width: 110px;
+            height: 110px;
+        }
+
+        .upload-img {
+            display: inline-block;
+            padding-left: 5px;
+            padding-right: 5px;
+            margin-bottom: 5px;
+            height: 30px;
+            line-height: 30px;
+            font-size: 12px;
+            color: #FFFFFF;
+            background-color: #f8ac59;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            border: 0px #fff solid;
+            box-shadow: 0px 0px 5px #B0B0B0;
+        }
+
+        .upload-img:hover {
+            background-color: #ec7e70;
+        }
+
+        .tc {
+            text-align: center;
+            padding-top: 10px;
+        }
+
+        label > * {
+            pointer-events: none;
+        }
+
+        table {
+            font-size: 12px;
+        }
+
+        table div {
+            font-size: 12px;
+        }
+
+        .bootstrap-table .table:not(.table-condensed), .bootstrap-table .table:not(.table-condensed) > tbody > tr > td, .bootstrap-table .table:not(.table-condensed) > tbody > tr > th, .bootstrap-table .table:not(.table-condensed) > tfoot > tr > td, .bootstrap-table .table:not(.table-condensed) > tfoot > tr > th, .bootstrap-table .table:not(.table-condensed) > thead > tr > td {
+            padding: 5px;
+        }
+
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <form class="form-horizontal m" id="form-reg-add">
+        <div class="row">
+            <div class="col-sm-2">
+                <div class="user-info-head action tc">
+                    <a href="javascript:void(0)"><img id="photo" class="photo" th:src="@{/img/snk-user.png}" > </a>
+                </div>
+                <div class="tc">
+                    <span class="upload-img" onclick="photograph('photo')"><i class="fa fa-camera"></i> 拍摄人像</span>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                访客信息
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-sm-2">
+                                        <a href="javascript:void(0)"><img id="idPhoto" class="idPhoto" th:src="@{/img/snk-user.png}" > </a>
+                                    </div>
+                                    <div class="col-sm-10">
+                                        <div class="row">
+                                            <div class="col-sm-5">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label is-required">访客姓名：</label>
+                                                    <div class="col-sm-6">
+                                                        <input id="name" name="name" class="form-control" type="text" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-5">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">来访事由：</label>
+                                                    <div class="col-sm-6">
+                                                        <select id="visitReason" name="visitReason" class="form-control" th:with="type=${@dict.getType('snk_visit_reason')}">
+                                                            <option value="">请选择</option>
+                                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-5">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label is-required">手机号：</label>
+                                                    <div class="col-sm-6">
+                                                        <input id="phone" name="phone" class="form-control" type="text" maxlength="11" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-5">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">性别：</label>
+                                                    <div class="col-sm-6">
+                                                        <select id="sex" name="sex" class="form-control" th:with="type=${@dict.getType('sys_user_sex')}">
+                                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-5">
+                                                <div class="form-group">
+                                                    <label class="col-sm-6 control-label">证件类型：</label>
+                                                    <div class="col-sm-6">
+                                                        <select id="idType" name="idType" class="form-control" th:with="type=${@dict.getType('snk_id_type')}">
+                                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="form-group">
+                                                    <label class="col-sm-5 control-label">证件号：</label>
+                                                    <div class="col-sm-7">
+                                                        <input id="idNo" name="idNo" class="form-control" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                被访问者
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-sm-7">
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label">企业：</label>
+                                            <div class="col-sm-9">
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="company">
+                                                    <div class="input-group-btn">
+                                                        <button type="button" class="btn btn-white dropdown-toggle" data-toggle="dropdown">
+                                                            <span class="caret"></span>
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">被访问者：</label>
+                                            <div class="col-sm-6">
+                                                <input name="companyUser" class="form-control" type="text">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <a class="btn btn-success btn-sm" onclick="readIdCard()">
+                    <i class="fa fa-vcard"></i> 读身份证
+                </a>
+                <a class="btn btn-warning btn-sm" onclick="reset()">
+                    <i class="fa fa-refresh"></i> 重置
+                </a>
+            </div>
+            <div class="col-sm-4">
+                <div class="col-sm-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            门禁授权
+                        </div>
+                        <div class="panel-body">
+                            <label class="col-sm-3 control-label is-required">访问权限：</label>
+                            <div class="col-sm-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="auth" required>
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-white dropdown-toggle" data-toggle="dropdown">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                                        </ul>
+                                    </div>
+                                </div>
+                                <span id="tips" class="help-block m-b-none"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            登记类型
+                        </div>
+                        <div class="panel-body" style="height: 183px">
+                            <div class="row">
+                                <div class="col-sm-12" style="text-align: center">
+                                    <div class="form-group">
+                                        <label class="check-box" onclick="clickType(1)">
+                                            <input name="type" type="radio" th:value="1" th:text="卡号" checked>
+                                        </label>
+                                        <label class="check-box" onclick="clickType(2)">
+                                            <input name="type" type="radio" th:value="2" th:text="二维码">
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-1"></div>
+                                <div class="col-sm-8">
+                                    <div id="cnDiv" class="form-group">
+                                        <label class="col-sm-4 control-label">卡号：</label>
+                                        <div class="col-sm-8">
+                                            <input id="cardNo" name="cardNo" class="form-control" type="text">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </form>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: bootstrap-suggest-js" />
+    <script th:inline="javascript">
+        var prefix = ctx + "door/visit/reg";
+
+        $("#form-reg-add").validate({
+            ignore : "",//验证隐藏域,解决切换标签后隐藏域无法验证问题
+            onkeyup: false,
+            rules:{
+                phone:{
+                    isPhone:true,
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "cancel": "0",
+                            "phone": function() {
+                                return $.common.trim($("#phone").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                idNo: {
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "cancel": "0",
+                            "idNo": function() {
+                                return $.common.trim($("#idNo").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                cardNo: {
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "cancel": "0",
+                            "proofValue": function() {
+                                var cardNo = $.common.trim($("#cardNo").val()).replace(/\b(0+)/gi,"");
+                                $("#cardNo").val(cardNo);
+                                return cardNo;
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                }
+            },
+            messages: {
+                "phone": {
+                    remote: "手机号已登记，请先注销"
+                },
+                "idNo": {
+                    remote: "证件号已登记，请先注销"
+                },
+                "cardNo": {
+                    remote: "卡号已登记，请先注销"
+                }
+            },
+            focusCleanup: true
+        });
+
+        var companyBsSuggest = $("#company").bsSuggest({
+            url: ctx + "door/visit/company/autoList",
+            showBtn: false,
+            idField: "id",
+            keyField: "name",
+            effectiveFields: ["name"]
+        }).on('onSetSelectValue', function (e, selectedData, selectedRawData) {
+        }).on('onUnsetSelectValue', function (e) {
+        });
+
+        var control = false;
+        var authBsSuggest = $("#auth").bsSuggest({
+            url: ctx + "door/visit/auth/autoList",
+            showBtn: false,
+            idField: "id",
+            keyField: "name",
+            effectiveFields: ["name"]
+        }).on('onSetSelectValue', function (e, selectedData, selectedRawData) {
+            var deviceList = JSON.parse(selectedRawData.deviceJson);
+            control = false;
+            $.each(deviceList, function (idx, obj) {
+                if ("1" == obj.deviceType) {    // 控制板，需要录入卡号
+                    control = true;
+                    return false;
+                }
+            });
+        }).on('onUnsetSelectValue', function () {
+        });
+
+        function photograph(imgId) {
+            $.modal.open('拍摄', ctx + 'common/photograph/' + imgId, 500, 500, null, true);
+        }
+
+        function readIdCard() {
+            $.ajax({
+                type: "get",
+                url: ctx + "common/readIdCard",
+                data: null,
+                success: function(result) {
+                    var data = result.data;
+                    $("#idPhoto").attr("src", "data:image/jpg;base64," + data.photo);
+                    $("#name").val(data.name);
+                    $("#sex").val(data.sex);
+                    $("#idNo").val(data.idNum);
+                    $("#form-reg-add").validate().element($("#idNo"));
+                }
+            });
+        }
+
+        function clickType(type) {
+            if (type == 1) {
+                $("#cnDiv").show();
+            } else {
+                $("#cnDiv").hide();
+            }
+        }
+
+        function reset() {
+            $("#photo").attr("src", ctx + "img/snk-user.png");
+            $("#idPhoto").attr("src", ctx + "img/snk-user.png");
+            $.form.reset();
+        }
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var photo = $("#photo").attr("src");
+                if ($.common.isEmpty(photo) || "/img/snk-user.png" == photo) {
+                    $.modal.alertWarning("请拍摄人像");
+                    return;
+                }
+                var auth = $("#auth").attr("data-id");
+                if ($.common.isEmpty(auth)) {
+                    $.modal.alertWarning("请选择访问权限");
+                    return;
+                }
+                debugger
+                var data = $("#form-reg-add").serializeArray();
+                var type = $("input[name=type]:checked").val();
+                var cardNo = $("#cardNo").val();
+                if (type == 1) {
+                    if (control && $.common.isEmpty(cardNo)) {
+                        $.modal.alertWarning("请录入卡号");
+                        return;
+                    }
+                    data.push({"name": "proofValue", "value": cardNo});
+                } else {
+
+                }
+                data.push({"name": "photo", "value": photo});
+                data.push({"name": "idPhoto", "value": $("#idPhoto").attr("src")});
+                data.push({"name": "companyId", "value": $("#company").attr("data-id")});
+                data.push({"name": "authId", "value": auth});
+                data.push({"name": "proofType", "value": type});
+                $.operate.save(prefix + "/add", data);
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.DeviceAuthMapper">
+    
+    <resultMap type="Auth" id="DeviceAuthResult">
+        <result property="id"           column="id"    />
+        <result property="userId"       column="user_id"    />
+        <result property="userName"     column="user_name"    />
+        <result property="userNo"       column="user_no"    />
+        <result property="cardNo"       column="card_no"    />
+        <result property="photo"        column="photo"    />
+        <result property="finger"       column="finger"    />
+        <result property="deviceId"     column="device_id"    />
+        <result property="sn"           column="sn"    />
+        <result property="controlPort"  column="control_port"    />
+        <result property="slotId"       column="slot_id"    />
+        <result property="slotIdx"      column="slot_idx"    />
+        <result property="openNum"      column="open_num"    />
+        <result property="holiday"      column="holiday"    />
+        <result property="special"      column="special"    />
+        <result property="expTime"      column="exp_time"    />
+        <result property="cardStatus"   column="card_status"    />
+        <result property="status"       column="status"    />
+        <result property="remark"       column="remark"    />
+        <result property="faceNum"      column="face_num"    />
+        <result property="fingerNum"    column="finger_num"    />
+        <result property="deptName"     column="dept_name"    />
+        <result property="postName"     column="post_name"    />
+        <result property="deviceName"   column="device_name"    />
+        <result property="positionName" column="position_name"    />
+        <result property="slotName"     column="slot_name"    />
+        <result property="admin"        column="admin"    />
+        <result property="delFlag"      column="del_flag"    />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"    />
+        <result property="updateBy"     column="update_by"    />
+        <result property="updateTime"   column="update_time"    />
+    </resultMap>
+
+    <sql id="selectAuthVo">
+        select a.id, a.user_id, a.device_id, a.slot_id, a.open_num, a.holiday, a.special, a.exp_time, a.card_status, a.status, a.remark, a.del_flag,
+               a.create_by, a.create_time, a.update_by, a.update_time, if(a.admin = '2', i.name, b.name) as user_name, d.idx as slot_idx, c.sn, c.control_port, a.finger, a.admin,
+               a.card_no, g.dept_name, c.name as device_name, f.name as position_name, d.name as slot_name, a.photo, if(a.admin = '2', i.id, b.user_no) as user_no, h.post_name
+          from snk_device_auth a
+          left join snk_user b on b.id = a.user_id
+          left join snk_device c on c.id = a.device_id
+          left join snk_device_time_slot d on d.id = a.slot_id
+          left join snk_device_position f on f.id = c.position_id
+          left join sys_dept g on g.dept_id = b.dept_id
+          left join sys_post h on h.post_id = b.post_id
+          left join snk_visit_reg i on i.id = a.user_id
+    </sql>
+
+    <select id="selectAuthList" parameterType="Auth" resultMap="DeviceAuthResult">
+        <include refid="selectAuthVo"/>
+        <where>
+            (a.del_flag = '0' or (a.del_flag = '1' and a.status = '0'))
+            <if test="userId != null"> and a.user_id = #{userId}</if>
+            <if test="userName != null and userName != ''"> and b.name = #{userName}</if>
+            <if test="deviceId != null"> and a.device_id = #{deviceId}</if>
+            <if test="positionId != null"> and c.position_id = #{positionId}</if>
+            <if test="sn != null and sn != ''"> and c.sn = #{sn}</if>
+            <if test="deviceName != null and deviceName != ''"> and c.name = #{deviceName}</if>
+            <if test="slotId != null"> and a.slot_id = #{slotId}</if>
+            <if test="holiday != null and holiday != ''"> and a.holiday = #{holiday}</if>
+            <if test="special != null and special != ''"> and a.special = #{special}</if>
+            <if test="status != null and status != ''"> and a.status = #{status}</if>
+            <if test="delFlag != null and delFlag != ''"> and a.del_flag = #{delFlag}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(exp_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(exp_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+            <!-- 数据范围过滤 -->
+            ${params.dataScopeSnk}
+            order by create_time desc
+        </where>
+    </select>
+
+    <select id="selectAuth" parameterType="Auth" resultMap="DeviceAuthResult">
+        <include refid="selectAuthVo"/>
+        where (a.del_flag = '0' or (a.del_flag = '1' and a.status = '0'))
+          and a.device_id = #{deviceId}
+          and a.user_id = #{userId}
+        order by create_time desc
+        limit 1
+    </select>
+
+    <select id="selectAuthById" parameterType="Long" resultMap="DeviceAuthResult">
+        <include refid="selectAuthVo"/>
+        where a.id = #{id}
+    </select>
+    
+    <select id="selectAuthByUserId" parameterType="Long" resultMap="DeviceAuthResult">
+        <include refid="selectAuthVo"/>
+        where (a.del_flag = '0' or (a.del_flag = '1' and a.status = '0'))
+          and a.user_id = #{userId}
+    </select>
+
+    <delete id="deleteAuthByDeviceIds" parameterType="String">
+        update snk_device_auth
+           set status = '1',
+               del_flag = '1'
+         where (del_flag = '0' or (status = '0' and del_flag = '1'))
+           and device_id in
+        <foreach item="deviceId" collection="array" open="(" separator="," close=")">
+            #{deviceId}
+        </foreach>
+    </delete>
+        
+    <insert id="insertAuth" parameterType="Auth">
+            insert into snk_device_auth(card_no, photo, finger, user_id, device_id, slot_id, open_num, holiday, special, exp_time, card_status, status, admin, remark, create_by, create_time)
+                 values(#{cardNo}, #{photo}, #{finger}, #{userId}, #{deviceId}, #{slotId}, #{openNum}, #{holiday}, #{special}, #{expTime}, #{cardStatus}, #{status}, #{admin}, #{remark}, #{createBy}, sysdate())
+    </insert>
+
+    <update id="updateAuth" parameterType="Auth">
+        update snk_device_auth
+           set card_no = #{cardNo},
+               photo = #{photo},
+               finger = #{finger},
+               slot_id = #{slotId},
+               open_num = #{openNum},
+               holiday = #{holiday},
+               special = #{special},
+               exp_time = #{expTime},
+               card_status = #{cardStatus},
+               status = #{status},
+               admin = #{admin},
+               remark = #{remark},
+               del_flag = #{delFlag},
+               update_by = #{createBy},
+               update_time = sysdate()
+         where user_id = #{userId}
+           and device_id = #{deviceId}
+           and (del_flag = '0' or (status = '0' and del_flag = '1'))
+    </update>
+
+    <delete id="deleteAuth" parameterType="Auth">
+        update snk_device_auth
+           set status = #{status},
+               del_flag = '1',
+               update_by = #{createBy},
+               update_time = sysdate()
+         where (del_flag = '0' or (status = '0' and del_flag = '1'))
+           and device_id = #{deviceId}
+           and user_id = #{userId}
+    </delete>
+
+    <delete id="deleteAuthByUserId" parameterType="Long">
+        update snk_device_auth
+           set status = '1',
+               del_flag = '1'
+         where (del_flag = '0' or (status = '0' and del_flag = '1'))
+           and user_id = #{userId}
+    </delete>
+
+    <delete id="deleteAuthBySn" parameterType="String">
+        update snk_device_auth a
+           set a.status = '1',
+               a.del_flag = '1',
+               a.update_by = 'clear',
+               a.update_time = sysdate()
+         where (a.del_flag = '0' or (a.status = '0' and a.del_flag = '1'))
+           and exists(select 1
+                        from snk_device b
+                       where b.del_flag = '0'
+                         and b.id = a.device_id
+                         and b.sn = #{sn})
+    </delete>
+
+    <delete id="deleteDeviceAuthByIds" parameterType="String">
+        update snk_device_auth set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.TimeSlotMapper">
+    
+    <resultMap type="TimeSlot" id="TimeSlotResult">
+        <result property="id"            column="id"    />
+        <result property="sn"            column="sn"    />
+        <result property="idx"           column="idx"    />
+        <result property="name"          column="name"    />
+        <result property="timeGroup"     column="time_group"    />
+        <result property="delFlag"       column="del_flag"    />
+        <result property="createBy"      column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectTimeSlotVo">
+        select a.id, a.sn, a.idx, a.name, a.time_group, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_device_time_slot a
+    </sql>
+
+    <select id="selectTimeSlotList" parameterType="TimeSlot" resultMap="TimeSlotResult">
+        <include refid="selectTimeSlotVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="sn != null and sn != ''"> and a.sn = #{sn}</if>
+            <if test="name != null and name != ''"> and a.name = #{name}</if>
+            order by idx
+        </where>
+    </select>
+
+    <select id="selectMaxIdx" parameterType="String" resultType="Integer">
+        select ifnull(max(idx), 1)
+          from snk_device_time_slot
+         where del_flag = '0'
+           and sn = #{sn}
+    </select>
+    
+    <insert id="insertTimeSlot" parameterType="TimeSlot" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_device_time_slot
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sn != null and sn != ''">sn,</if>
+            <if test="idx != null">idx,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="timeGroup != null and timeGroup != ''">time_group,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sn != null and sn != ''">#{sn},</if>
+            <if test="idx != null">#{idx},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="timeGroup != null and timeGroup != ''">#{timeGroup},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTimeSlot" parameterType="TimeSlot">
+        update snk_device_time_slot
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="timeGroup != null and timeGroup != ''">time_group = #{timeGroup},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectTimeSlotById" parameterType="Long" resultMap="TimeSlotResult">
+        <include refid="selectTimeSlotVo"/> where a.del_flag = '0' and a.id = #{id}
+    </select>
+
+    <select id="selectTimeSlotByIdx" resultMap="TimeSlotResult">
+        <include refid="selectTimeSlotVo"/> where a.del_flag = '0' and a.sn = #{sn} and a.idx = #{idx} limit 1
+    </select>
+
+    <delete id="deleteTimeSlotById" parameterType="Long">
+        update snk_device_time_slot set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteTimeSlotByIdx">
+        update snk_device_time_slot set del_flag = '1' where sn = #{sn} and idx = #{idx}
+    </delete>
+
+    <delete id="deleteTimeSlotBySn" parameterType="String">
+        update snk_device_time_slot set del_flag = '1' where idx != 1 and sn = #{sn}
+    </delete>
+    
+</mapper>

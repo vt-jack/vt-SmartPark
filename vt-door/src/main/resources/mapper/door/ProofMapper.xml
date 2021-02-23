@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.ProofMapper">
+    
+    <resultMap type="Proof" id="ProofResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="type"    column="type"    />
+        <result property="finger"    column="finger"    />
+        <result property="value"    column="value"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectProofVo">
+        select a.id, a.user_id, a.type, a.finger, a.value, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_user_proof a
+    </sql>
+
+    <select id="selectProofList" parameterType="Proof" resultMap="ProofResult">
+        <include refid="selectProofVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="userId != null"> and a.user_id = #{userId}</if>
+            <if test="type != null and type != ''"> and a.type = #{type}</if>
+            <if test="value != null and value != ''"> and a.value = #{value}</if>
+        </where>
+    </select>
+
+    <select id="selectProofByUserId" parameterType="Long" resultMap="ProofResult">
+        <include refid="selectProofVo"/>
+        <where>
+                a.del_flag = '0'
+            and a.user_id = #{userId}
+        </where>
+    </select>
+    
+    <select id="selectProofById" parameterType="Long" resultMap="ProofResult">
+        <include refid="selectProofVo"/>
+        where a.id = #{id}
+    </select>
+        
+    <insert id="insertProof" parameterType="Proof" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_user_proof
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="finger != null and finger != ''">finger,</if>
+            <if test="value != null and value != ''">value,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="type != null">#{type},</if>
+            <if test="finger != null and finger != ''">#{finger},</if>
+            <if test="value != null and value != ''">#{value},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+         </trim>
+    </insert>
+
+    <insert id="insertProofBatch" parameterType="Proof" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_user_proof(user_id, type, finger, value, create_by, create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.userId}, #{item.type}, #{item.finger}, #{item.value}, #{item.createBy}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <update id="updateProof" parameterType="Proof">
+        update snk_user_proof
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="finger != null">finger = #{finger},</if>
+            <if test="value != null">value = #{value},</if>
+            <if test="delFlag != null and delFlag != ''">del_flag = #{delFlag},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateProofBatch" parameterType="Proof">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update snk_user_proof
+            set value = #{item.value},
+                update_by = #{item.updateBy},
+                update_time = #{item.updateTime}
+            where id = #{item.id}
+        </foreach>
+    </update>
+
+    <delete id="deleteProofById" parameterType="Long">
+        update snk_user_proof set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteProofByIds" parameterType="String">
+        update snk_user_proof set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteProofByUserIds" parameterType="String">
+        update snk_user_proof set del_flag = '1' where del_flag = '0'
+        and user_id in
+        <foreach item="userId" collection="array" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+</mapper>

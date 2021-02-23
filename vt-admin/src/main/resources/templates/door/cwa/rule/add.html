@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:include="include :: header('新增考勤规则')" />
+    <link th:href="@{/css/timepicker.css}" rel="stylesheet"/>
+    <style type="text/css">
+        .time {
+            width: 40px;
+        }
+
+        .input {
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+        }
+
+        .minute {
+            width: 30px;
+        }
+
+        label > * {
+            pointer-events: none;
+        }
+
+        .icheckbox-blue {
+            top: 7px; !important;
+        }
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-rule-add">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">规则名称：</label>
+                        <div class="col-sm-8">
+                            <input id="name" name="name" class="form-control" type="text" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <table style="text-align: center;border-collapse:separate; border-spacing:5px;">
+                        <tr>
+                            <td class="col-sm-2">
+                                <label class="check-box" onclick="setInput(1)">
+                                    <input id="time1" type="checkbox" th:text="星期一" checked>
+                                </label>
+                            </td>
+                            <td class="col-sm-2">
+                                <label class="check-box" onclick="setInput(2)">
+                                    <input id="time2" type="checkbox" th:text="星期二" checked>
+                                </label>
+                            </td>
+                            <td class="col-sm-2">
+                                <label class="check-box" onclick="setInput(3)">
+                                    <input id="time3" type="checkbox" th:text="星期三" checked>
+                                </label>
+                            </td>
+                            <td class="col-sm-2">
+                                <label class="check-box" onclick="setInput(4)">
+                                    <input id="time4" type="checkbox" th:text="星期四" checked>
+                                </label>
+                            </td>
+                            <td class="col-sm-2">
+                                <label class="check-box" onclick="setInput(5)">
+                                    <input id="time5" type="checkbox" th:text="星期五" checked>
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td >
+                                上午：<input id="time1B" type="text" class="time input" value="09:00"> - <input id="time1E" type="text" class="time input" value="12:00">
+                            </td>
+                            <td>
+                                上午：<input id="time2B" type="text" class="time input" value="09:00"> - <input id="time2E" type="text" class="time input" value="12:00">
+                            </td>
+                            <td>
+                                上午：<input id="time3B" type="text" class="time input" value="09:00"> - <input id="time3E" type="text" class="time input" value="12:00">
+                            </td>
+                            <td >
+                                上午：<input id="time4B" type="text" class="time input" value="09:00"> - <input id="time4E" type="text" class="time input" value="12:00">
+                            </td>
+                            <td>
+                                上午：<input id="time5B" type="text" class="time input" value="09:00"> - <input id="time5E" type="text" class="time input" value="12:00">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td >
+                                下午：<input id="time1BP" type="text" class="time input" value="13:30"> - <input id="time1EP" type="text" class="time input" value="18:00">
+                            </td>
+                            <td>
+                                下午：<input id="time2BP" type="text" class="time input" value="13:30"> - <input id="time2EP" type="text" class="time input" value="18:00">
+                            </td>
+                            <td>
+                                下午：<input id="time3BP" type="text" class="time input" value="13:30"> - <input id="time3EP" type="text" class="time input" value="18:00">
+                            </td>
+                            <td >
+                                下午：<input id="time4BP" type="text" class="time input" value="13:30"> - <input id="time4EP" type="text" class="time input" value="18:00">
+                            </td>
+                            <td>
+                                下午：<input id="time5BP" type="text" class="time input" value="13:30"> - <input id="time5EP" type="text" class="time input" value="18:00">
+                            </td>
+                        </tr>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr></tr>
+                        <tr>
+                            <td>
+                                <label class="check-box" onclick="setInput(6)">
+                                    <input id="time6" type="checkbox" th:text="星期六">
+                                </label>
+                            </td>
+                            <td>
+                                <label class="check-box" onclick="setInput(7)">
+                                    <input id="time7" type="checkbox" th:text="星期日">
+                                </label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                上午：<input id="time6B" type="text" class="time input" disabled> - <input id="time6E" type="text" class="time input" disabled>
+                            </td>
+                            <td>
+                                上午：<input id="time7B" type="text" class="time input" disabled> - <input id="time7E" type="text" class="time input" disabled>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                下午：<input id="time6BP" type="text" class="time input" disabled> - <input id="time6EP" type="text" class="time input" disabled>
+                            </td>
+                            <td>
+                                下午：<input id="time7BP" type="text" class="time input" disabled> - <input id="time7EP" type="text" class="time input" disabled>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+                </br>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-12 control-label" style="text-align: left">超过 <input name="lateMm" class="minute input" type="text" value="3"> 分钟算迟到/早退</label>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-12 control-label" style="text-align: left">迟到/早退 <input name="absHalf" class="minute input" type="text" value="60"> 分钟算旷工半天</label>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="col-sm-12 control-label" style="text-align: left">迟到/早退 <input name="absDay" class="minute input" type="text" value="120"> 分钟算旷工一天</label>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:src="@{/js/timepicker.js}"></script>
+    <script th:inline="javascript">
+        var prefix = ctx + "door/cwa/rule"
+
+        $("#form-rule-add").validate({
+            onkeyup: false,
+            rules:{
+                model:{
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "name": function() {
+                                return $.common.trim($("#name").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+            },
+            messages: {
+                "name": {
+                    remote: "规则名称已存在"
+                }
+            },
+            focusCleanup: true
+        });
+
+        $(function(){
+            // 初始化时间控件
+            for (var i = 1; i < 8; i++) {
+                $("#time"+ i +"B").hunterTimePicker();
+                $("#time"+ i +"E").hunterTimePicker();
+                $("#time"+ i +"BP").hunterTimePicker();
+                $("#time"+ i +"EP").hunterTimePicker();
+            }
+        });
+
+        function setInput(id) {
+            if ($("#time" + id).parent().hasClass("checked")) {
+                $("#time" + id + "B").val(null);
+                $("#time" + id + "E").val(null);
+                $("#time" + id + "BP").val(null);
+                $("#time" + id + "EP").val(null);
+                $("#time" + id + "B").attr("disabled", true);
+                $("#time" + id + "E").attr("disabled", true);
+                $("#time" + id + "BP").attr("disabled", true);
+                $("#time" + id + "EP").attr("disabled", true);
+            } else {
+                $("#time" + id + "B").val("09:00");
+                $("#time" + id + "E").val("12:00");
+                $("#time" + id + "BP").val("13:30");
+                $("#time" + id + "EP").val("18:00");
+                $("#time" + id + "B").attr("disabled", false);
+                $("#time" + id + "E").attr("disabled", false);
+                $("#time" + id + "BP").attr("disabled", false);
+                $("#time" + id + "EP").attr("disabled", false);
+            }
+        }
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var week = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"];
+                var data = $("#form-rule-add").serializeArray();
+                var ruleJson = [];
+                for (var i = 1; i < 8; i++) {
+                    var timeJson = {};
+                    if ($("#time" + i).parent().hasClass("checked")) {
+                        var startAM = $("#time" + i + "B").val();
+                        var endAM = $("#time" + i + "E").val();
+                        var startPM = $("#time" + i + "BP").val();
+                        var endPM = $("#time" + i + "EP").val();
+                        if (startAM >= endAM) {
+                            $.modal.alertWarning(week[i - 1] + "上午：开始时间不能 >= 结束时间");
+                            return;
+                        }
+                        if (startPM >= endPM) {
+                            $.modal.alertWarning(week[i - 1] + "下午：开始时间不能 >= 结束时间");
+                            return;
+                        }
+                        if (endAM > startPM) {
+                            $.modal.alertWarning(week[i - 1] + "上午结束时间不能 > 下午开始时间");
+                            return;
+                        }
+                        timeJson.am = {"start": startAM, "end": endAM};
+                        timeJson.pm = {"start": startPM, "end": endPM};
+                    }
+                    ruleJson.push(timeJson);
+                }
+                data.push({"name": "ruleJson", "value": JSON.stringify(ruleJson)});
+                $.operate.save(prefix + "/add", data);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaUserMapper">
+    
+    <resultMap type="CwaUser" id="CwaUserResult">
+        <result property="id"    column="id"    />
+        <result property="ruleId"    column="rule_id"    />
+        <result property="ruleName"    column="rule_Name"    />
+        <result property="ruleJson"    column="rule_json"    />
+        <result property="lateMm"    column="late_mm"    />
+        <result property="absHalf"    column="abs_half"    />
+        <result property="absDay"    column="abs_day"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userNo"    column="user_no"    />
+        <result property="userName"    column="user_name"    />
+        <result property="sex"    column="sex"    />
+        <result property="deptName"    column="dept_name"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaUserVo">
+        select a.id, a.rule_id, c.name as rule_name, c.rule_json, c.late_mm, c.abs_half, c.abs_day, a.user_id, b.user_no,
+               b.name as user_name, b.sex, d.dept_name, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_user a
+          left join snk_user b on b.id = a.user_id
+          left join snk_cwa_rule c on c.id = a.rule_id
+          left join sys_dept d on d.dept_id = b.dept_id
+    </sql>
+
+    <select id="selectCwaUserList" parameterType="CwaUser" resultMap="CwaUserResult">
+        <include refid="selectCwaUserVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="userName != null and userName != ''"> and b.name = #{userName}</if>
+            <if test="deptId != null"> and b.dept_id = #{deptId}</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.create_time desc
+    </select>
+
+    <select id="selectUserAutoList" parameterType="User" resultType="AutoUser">
+        select a.user_id as userId, b.name, c.dept_name as deptName
+          from snk_cwa_user a
+          left join snk_user b on b.id = a.user_id
+          left join sys_dept c on c.dept_id = b.dept_id
+         where a.del_flag = '0'
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+    </select>
+
+    <select id="selectCwaUserByUserId" parameterType="Long" resultMap="CwaUserResult">
+        <include refid="selectCwaUserVo"/>
+        where a.del_flag = '0'
+          and a.user_id = #{userId}
+        limit 1
+    </select>
+
+    <insert id="insertCwaUser" parameterType="CwaUser" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="ruleId != null">rule_id,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="ruleId != null">#{ruleId},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <delete id="deleteCwaUserById" parameterType="Long">
+        update snk_cwa_user set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaUserByIds" parameterType="String">
+        update snk_cwa_user set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

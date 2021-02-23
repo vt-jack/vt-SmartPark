@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.VisitRegMapper">
+
+    <resultMap type="VisitReg" id="VisitRegResult">
+        <result property="id"    column="id"    />
+        <result property="photo"    column="photo"    />
+        <result property="companyId"    column="company_id"    />
+        <result property="companyName"    column="company_name"    />
+        <result property="companyUser"    column="company_user"    />
+        <result property="authId"    column="auth_id"    />
+        <result property="idPhoto"    column="id_photo"    />
+        <result property="name"    column="name"    />
+        <result property="sex"    column="sex"    />
+        <result property="phone"    column="phone"    />
+        <result property="idType"    column="id_type"    />
+        <result property="idNo"    column="id_no"    />
+        <result property="visitReason"    column="visit_reason"    />
+        <result property="proofType"    column="proof_type"    />
+        <result property="proofValue"    column="proof_value"    />
+        <result property="visitTime"   column="visit_time"/>
+        <result property="cancel"   column="cancel"/>
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectVisitRegVo">
+        select a.id, a.photo, a.company_id, b.name as company_name, a.company_user, a.auth_id, a.id_photo, a.name, a.sex, a.phone, a.id_type, a.id_no,
+               a.visit_time, a.visit_reason, a.proof_type, a.proof_value, a.cancel, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_visit_reg a
+          left join snk_visit_company b on b.id = a.company_id
+          left join sys_user c on a.create_by = c.login_name
+    </sql>
+
+    <select id="selectVisitRegList" parameterType="VisitReg" resultMap="VisitRegResult">
+        <include refid="selectVisitRegVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''">and a.name like concat('%', #{name}, '%')</if>
+            <if test="companyId != null">and a.company_id = #{companyId}</if>
+            <if test="phone != null and phone != ''">and a.phone = #{phone}</if>
+            <if test="idNo != null and idNo != ''">and a.id_no = #{idNo}</if>
+            <if test="proofValue != null and proofValue != ''">and a.proof_value = #{proofValue}</if>
+            <if test="visitReason != null and visitReason != ''">and a.visit_reason = #{visitReason}</if>
+            <if test="cancel != null and cancel != ''">and a.cancel = #{cancel}</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.create_time desc
+    </select>
+
+    <insert id="insertVisitReg" parameterType="VisitReg" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_visit_reg
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="photo != null and photo != ''">photo,</if>
+            <if test="companyId != null">company_id,</if>
+            <if test="companyUser != null and companyUser != ''">company_user,</if>
+            <if test="authId != null">auth_id,</if>
+            <if test="idPhoto != null and idPhoto != ''">id_photo,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="sex != null and sex != ''">sex,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="idType != null and idType != ''">id_type,</if>
+            <if test="idNo != null and idNo != ''">id_no,</if>
+            <if test="visitReason != null and visitReason != ''">visit_reason,</if>
+            <if test="proofType != null and proofType != ''">proof_type,</if>
+            <if test="proofValue != null and proofValue != ''">proof_value,</if>
+            <if test="visitTime != null and visitTime != ''">visit_time,</if>
+            <if test="cancel != null and cancel != ''">cancel,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="photo != null and photo != ''">#{photo},</if>
+            <if test="companyId != null">#{companyId},</if>
+            <if test="companyUser != null and companyUser != ''">#{companyUser},</if>
+            <if test="authId != null">#{authId},</if>
+            <if test="idPhoto != null and idPhoto != ''">#{idPhoto},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="sex != null and sex != ''">#{sex},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="idType != null and idType != ''">#{idType},</if>
+            <if test="idNo != null and idNo != ''">#{idNo},</if>
+            <if test="visitReason != null and visitReason != ''">#{visitReason},</if>
+            <if test="proofType != null and proofType != ''">#{proofType},</if>
+            <if test="proofValue != null and proofValue != ''">#{proofValue},</if>
+            <if test="visitTime != null and visitTime != ''">#{visitTime},</if>
+            <if test="cancel != null and cancel != ''">#{cancel},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateVisitReg" parameterType="VisitReg">
+        update snk_visit_reg
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="visitTime != null and visitTime != ''">visit_time = #{visitTime},</if>
+            <if test="cancel != null and cancel != ''">cancel = #{cancel},</if>
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectVisitRegById" parameterType="Long" resultMap="VisitRegResult">
+        <include refid="selectVisitRegVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <select id="selectVisitRegByCardNo" parameterType="String" resultMap="VisitRegResult">
+        <include refid="selectVisitRegVo"/>
+        where a.del_flag = '0'
+          and a.cancel = '0'
+          and a.proof_type = '1'
+          and a.proof_value = #{cardNo}
+        limit 1
+    </select>
+
+    <select id="selectBySearchValue" parameterType="Long" resultMap="VisitRegResult">
+        <include refid="selectVisitRegVo"/>
+        where a.del_flag = '0'
+          and a.cancel = '0'
+          and (a.proof_value = #{searchValue} or a.id_no = #{searchValue})
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+    </select>
+
+    <delete id="deleteVisitRegById" parameterType="Long">
+        update snk_visit_reg set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteVisitRegByIds" parameterType="String">
+        update snk_visit_reg set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

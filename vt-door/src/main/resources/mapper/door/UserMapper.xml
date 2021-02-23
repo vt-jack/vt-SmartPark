@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.UserMapper">
+    
+    <resultMap type="User" id="UserResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="userNo"    column="user_no"    />
+        <result property="cardNo"    column="card_no"    />
+        <result property="faceNum"    column="face_num"    />
+        <result property="fingerNum"    column="finger_num"    />
+        <result property="deptId"    column="dept_id"    />
+        <result property="deptName"    column="dept_name"    />
+        <result property="postId"    column="post_id"    />
+        <result property="postName"    column="post_name"    />
+        <result property="sex"    column="sex"    />
+        <result property="idType"    column="id_type"    />
+        <result property="idNo"    column="id_no"    />
+        <result property="nation"    column="nation"    />
+        <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="address"    column="address"    />
+        <result property="photo"    column="photo"    />
+        <result property="admin"    column="admin"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="blacklist"    column="blacklist"    />
+    </resultMap>
+
+    <sql id="selectUserVo">
+        select a.id, a.name, a.user_no, a.dept_id, b.dept_name, a.post_id, c.post_name, a.sex, a.id_type, a.card_no, a.id_no, a.nation, a.phone, a.email, a.address,
+               a.admin, a.photo, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
+               (select 1 from snk_user_blacklist d where d.ref_id = a.id and del_flag = '0') as blacklist,
+               (select CONCAT('[', GROUP_CONCAT(CONCAT('"', value, '"')), ']') from snk_user_proof e where e.user_id = a.id and type = '1' and del_flag = '0') as face_num,
+               (select CONCAT('[', GROUP_CONCAT(CONCAT('{"finger":"', finger,'","value":"', value, '"}')), ']') from snk_user_proof e where e.user_id = a.id and type = '2' and del_flag = '0') as finger_num
+          from snk_user a
+          left join sys_dept b on b.dept_id = a.dept_id
+          left join sys_post c on c.post_id = a.post_id
+    </sql>
+
+    <select id="selectUserList" parameterType="User" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+            <if test="idNo != null and idNo != ''"> and a.id_no like concat('%', #{idNo}, '%')</if>
+            <if test="phone != null and phone != ''"> and a.phone = #{phone}</if>
+            <if test="cardNo != null and cardNo != ''"> and a.card_no = #{cardNo}</if>
+            <if test="userNo != null and userNo != ''"> and a.user_no = #{userNo}</if>
+            <if test="deptId != null and deptId != 0">
+                AND (a.dept_id = #{deptId} OR a.dept_id IN ( SELECT t.dept_id FROM sys_dept t WHERE FIND_IN_SET (#{deptId},ancestors) ))
+            </if>
+            <if test='blacklist == "1"'>
+                and not exists(select 1 from snk_user_blacklist f where f.ref_id = a.id and del_flag = '0')
+            </if>
+            <if test="searchValue != null  and searchValue != ''">
+                AND a.name like concat('%', #{searchValue}, '%')
+            </if>
+            <!-- 数据范围过滤 -->
+            ${params.dataScopeSnk}
+        </where>
+        order by a.create_time desc
+    </select>
+    
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="userNo != null and userNo != ''">user_no,</if>
+            <if test="cardNo != null and cardNo != ''">card_no,</if>
+            <if test="deptId != null">dept_id,</if>
+            <if test="postId != null">post_id,</if>
+            <if test="sex != null and sex != ''">sex,</if>
+            <if test="idType != null and idType != ''">id_type,</if>
+            <if test="idNo != null and idNo != ''">id_no,</if>
+            <if test="nation != null and nation != ''">nation,</if>
+            <if test="phone != null and phone != ''">phone,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="photo != null and photo != ''">photo,</if>
+            <if test="admin != null and admin != ''">admin,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">#{id},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="userNo != null and userNo != ''">#{userNo},</if>
+            <if test="cardNo != null and cardNo != ''">#{cardNo},</if>
+            <if test="deptId != null">#{deptId},</if>
+            <if test="postId != null">#{postId},</if>
+            <if test="sex != null and sex != ''">#{sex},</if>
+            <if test="idType != null and idType != ''">#{idType},</if>
+            <if test="idNo != null and idNo != ''">#{idNo},</if>
+            <if test="nation != null and nation != ''">#{nation},</if>
+            <if test="phone != null and phone != ''">#{phone},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="photo != null and photo != ''">#{photo},</if>
+            <if test="admin != null and admin != ''">#{admin},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateUser" parameterType="User">
+        update snk_user
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="userNo != null and userNo != ''">user_no = #{userNo},</if>
+            card_no = #{cardNo},
+            <if test="deptId != null">dept_id = #{deptId},</if>
+            post_id = #{postId},
+            sex = #{sex},
+            <if test="idType != null and idType != ''">id_type = #{idType},</if>
+            <if test="idNo != null and idNo != ''">id_no = #{idNo},</if>
+            nation = #{nation},
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            email = #{email},
+            address = #{address},
+            photo = #{photo},
+            <if test="admin != null and admin != ''">admin = #{admin},</if>
+            <if test="delFlag != null and delFlag != ''">del_flag = #{delFlag},</if>
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectUserById" parameterType="Long" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <select id="selectUserByCardNo" parameterType="String" resultMap="UserResult">
+        <include refid="selectUserVo"/>
+         where a.del_flag = '0'
+           and a.card_no = #{card_no}
+         limit 1
+    </select>
+
+    <delete id="deleteUserById" parameterType="Long">
+        update snk_user set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteUserByIds" parameterType="String">
+        update snk_user set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

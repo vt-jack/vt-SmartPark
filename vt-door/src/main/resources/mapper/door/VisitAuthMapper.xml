@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.VisitAuthMapper">
+
+    <resultMap type="VisitAuth" id="VisitAuthResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="slotId"    column="slot_id"    />
+        <result property="slotName"    column="slot_name"    />
+        <result property="openNum"    column="open_num"    />
+        <result property="expTime"    column="exp_time"    />
+        <result property="deviceJson"    column="device_json"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectVisitAuthVo">
+        select a.id, a.name, a.slot_id, b.name as slot_name, a.open_num, a.exp_time, a.device_json, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_visit_auth a
+          left join snk_device_time_slot b on b.id = a.slot_id
+          left join sys_user c on a.create_by = c.login_name
+    </sql>
+
+    <select id="selectVisitAuthList" parameterType="VisitAuth" resultMap="VisitAuthResult">
+        <include refid="selectVisitAuthVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.create_time desc
+    </select>
+
+    <insert id="insertVisitAuth" parameterType="VisitAuth" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_visit_auth
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="slotId != null">slot_id,</if>
+            <if test="openNum != null">open_num,</if>
+            <if test="expTime != null and expTime != ''">exp_time,</if>
+            <if test="deviceJson != null and deviceJson != ''">device_json,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="slotId != null">#{slotId},</if>
+            <if test="openNum != null">#{openNum},</if>
+            <if test="expTime != null and expTime != ''">#{expTime},</if>
+            <if test="deviceJson != null and deviceJson != ''">#{deviceJson},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateVisitAuth" parameterType="VisitAuth">
+        update snk_visit_auth
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="slotId != null">slot_id = #{slotId},</if>
+            <if test="openNum != null">open_num = #{openNum},</if>
+            <if test="expTime != null and expTime != ''">exp_time = #{expTime},</if>
+            <if test="deviceJson != null and deviceJson != ''">device_json = #{deviceJson},</if>
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectVisitAuthById" parameterType="Long" resultMap="VisitAuthResult">
+        <include refid="selectVisitAuthVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteVisitAuthById" parameterType="Long">
+        update snk_visit_Auth set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteVisitAuthByIds" parameterType="String">
+        update snk_visit_Auth set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

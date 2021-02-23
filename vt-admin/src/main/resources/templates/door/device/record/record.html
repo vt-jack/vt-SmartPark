@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('设备记录列表')" />
+</head>
+<body class="gray-bg">
+<div class="container-div">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId1">
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>SN：</label>
+                                <input type="text" name="sn" style="width: 150px"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId1', 'bootstrap-table1');"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table1"></table>
+            </div>
+        </div>
+
+        <div class="col-sm-8">
+            <div class="col-sm-12 search-collapse">
+                <form id="formId2">
+                    <input id="treeId" name="deptId" hidden>
+                    <input id="sn" type="text" name="sn" hidden/>
+                    <div class="select-list">
+                        <ul>
+                            <li>
+                                <label>设备名称：</label>
+                                <input id="deviceName" type="text" name="deviceName" style="width: 150px"/>
+                            </li>
+                            <li>
+                                <label>部门：</label>
+                                <input name="deptName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择所属部门" style="width: 100px">
+                            </li>
+                            <li>
+                                <label>记录类型：</label>
+                                <select id="type" name="type" class="form-control m-b" th:with="type=${@dict.getType('snk_record_type')}" style="width: 150px">
+                                    <option value="">请选择</option>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </li>
+                            <li>
+                                <label>姓名：</label>
+                                <input id="userName" type="text" name="userName" style="width: 100px"/>
+                            </li>
+                            <li>
+                                <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId2', 'bootstrap-table2')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                <a class="btn btn-warning btn-rounded btn-sm" onclick="reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                            </li>
+                        </ul>
+                    </div>
+                </form>
+            </div>
+            <div class="btn-group-sm" id="toolbar2" role="group">
+                <a id="collect" class="btn btn-primary disabled" onclick="collectRecord()" shiro:hasPermission="door:record:collect">
+                    <i class="fa fa-plus"></i> 采集记录
+                </a>
+                <a id="export" class="btn btn-warning disabled" onclick="$.table.exportExcel('formId2')" shiro:hasPermission="door:record:export">
+                    <i class="fa fa-download"></i> 导出
+                </a>
+            </div>
+            <div class="col-sm-12 select-table table-striped">
+                <table id="bootstrap-table2"></table>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: footer" />
+<script th:inline="javascript">
+    var prefix = ctx + "door/device/record";
+    var recordType = [[${@dict.getType('snk_record_type')}]];
+    var recordFgType = [[${@dict.getType('snk_fg_record_type')}]];
+    var ioType = [[${@dict.getType('snk_io_type')}]];
+    var loginName = [[${@permission.getPrincipalProperty('loginName')}]];
+    var collect = true;
+    var tableId = "bootstrap-table2";
+    var param;
+
+    $(function() {
+        var options = {
+            id: "bootstrap-table1",
+            url: ctx + "door/device/pwd/deviceList",
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            modalName: "设备列表",
+            columns: [{
+                field: 'state',
+                radio: true
+            },
+            {
+                field: 'sn',
+                title: 'SN'
+            },
+            {
+                field: 'model',
+                title: '设备型号'
+            }],
+            onLoadSuccess: function(data) {
+                if (data.total == 0) {
+                    $("#collect").addClass("disabled", "disabled");
+                    $("#export").addClass("disabled", "disabled");
+                }
+                $("#sn").val(null);
+                $.table.search("formId2", "bootstrap-table2");
+            },
+            onClickRow: function (row) {
+                param = row;
+                $("#sn").val(row.sn);
+                $("#collect").removeClass("disabled");
+                $.table.search("formId2", "bootstrap-table2");
+            }
+        };
+        $.table.init(options);
+    });
+
+    $(function() {
+        var options = {
+            id: "bootstrap-table2",
+            toolbar: "toolbar2",
+            url: prefix + "/list",
+            exportUrl: prefix + "/export",
+            showColumns: false,
+            showToggle: false,
+            modalName: "设备记录",
+            columns: [{
+                field: 'proofValue',
+                title: '凭证',
+                formatter: function (value, row, index) {
+                    var html = "";
+                    if (!$.common.isEmpty(row.cardNo)) {
+                        html += "<i class='fa fa fa-vcard' title='卡号'></i>" + ($.common.isEmpty(row.cardNo) ? "" : row.cardNo);
+                    }
+                    if (!$.common.isEmpty(row.face)) {
+                        if (!$.common.isEmpty(html)) {
+                            html += "<br/>";
+                        }
+                        html += $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s' title='人脸'/>", 'auto', 'auto', 'self', "data:image/png;base64," + row.face);
+                    }
+                    if (!$.common.isEmpty(row.finger)) {
+                        if (!$.common.isEmpty(html)) {
+                            html += "<br/>";
+                        }
+                        html += $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s' title='指纹'/>", 'auto', 'auto', 'self', "data:image/png;base64," + row.finger);
+                    }
+                    return html;
+                }
+            },
+            {
+                field: 'userName',
+                title: '姓名'
+            },
+            {
+                field: 'deviceName',
+                title: '设备名称'
+            },
+            {
+                field: 'positionName',
+                title: '安装位置'
+            },
+            {
+                field: 'deptName',
+                title: '部门'
+            },
+            {
+                field: 'type',
+                title: '记录类型',
+                formatter: function(value, row, index) {
+                    if ("1" == param.deviceType) {
+                        return $.table.selectDictLabel(recordType, value);
+                    } else {
+                        return $.table.selectDictLabel(recordFgType, value);
+                    }
+                }
+            },
+            {
+                field: 'describe',
+                title: '描述',
+                formatter: function(value, row, index) {
+                    return "<span style='color: blue;'>" + value + "</span>"
+                }
+            },
+            {
+                field: 'temperature',
+                title: '温度'
+            },
+            {
+                field: 'ioType',
+                title: '出入类型',
+                formatter: function(value, row, index) {
+                    return $.table.selectDictLabel(ioType, value);
+                }
+            },
+            {
+                field: 'ioTime',
+                title: '记录时间'
+            }],
+            onLoadSuccess: function(data) {
+                if (data.total == 0) {
+                    $("#export").addClass("disabled", "disabled");
+                } else {
+                    $("#export").removeClass("disabled");
+                }
+                if ($.common.isEmpty($("#sn").val())) {
+                    $("#collect").addClass("disabled", "disabled");
+                }
+            }
+        };
+        $.table.init(options);
+    });
+    
+    /*用户管理-新增-选择部门树*/
+    function selectDeptTree() {
+        var treeId = $("#treeId").val();
+        var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+        var url = ctx + "system/dept/selectDeptTree/" + deptId;
+        var options = {
+            title: '选择部门',
+            width: "380",
+            url: url,
+            callBack: doSubmit
+        };
+        $.modal.openOptions(options);
+    }
+
+    function doSubmit(index, layero) {
+        var tree = layero.find("iframe")[0].contentWindow.$._tree;
+        if ($.tree.notAllowParents(tree)) {
+            var body = layer.getChildFrame('body', index);
+            $("#treeId").val(body.find('#treeId').val());
+            $("#treeName").val(body.find('#treeName').val());
+            layer.close(index);
+        }
+    }
+
+    function reset() {
+        $("#deviceName").val(null);
+        $("#treeId").val(null);
+        $("#treeName").val(null);
+        $("#type").val(null);
+        $("#userName").val(null);
+        $("#bootstrap-table2").bootstrapTable("refresh");
+    }
+
+    function collectRecord() {
+        var sn = $("#sn").val();
+        if ($.common.isEmpty(sn)) {
+            $.modal.alertWarning("请选择一个设备");
+            return;
+        }
+        operation("READ_TRANSACTION_DATABASE");
+    }
+
+    function operation(operation) {
+        $.modal.open("操作记录", ctx + "door/device/custom?operation=" + operation, null, null, null, true);
+    }
+
+</script>
+</body>
+</html>

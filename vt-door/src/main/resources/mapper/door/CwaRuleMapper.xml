@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaRuleMapper">
+    
+    <resultMap type="CwaRule" id="CwaRuleResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="ruleJson"    column="rule_json"    />
+        <result property="lateMm"    column="late_mm"    />
+        <result property="absHalf"    column="abs_half"    />
+        <result property="absDay"    column="abs_day"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaRuleVo">
+        select a.id, a.name, a.rule_json, a.late_mm, a.abs_half, a.abs_day, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_rule a
+    </sql>
+
+    <select id="selectCwaRuleList" parameterType="CwaRule" resultMap="CwaRuleResult">
+        <include refid="selectCwaRuleVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+        </where>
+        order by a.create_time desc
+    </select>
+    
+    <insert id="insertCwaRule" parameterType="CwaRule" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_rule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="ruleJson != null and ruleJson != ''">rule_json,</if>
+            <if test="lateMm != null">late_mm,</if>
+            <if test="absHalf != null">abs_half,</if>
+            <if test="absDay != null">abs_day,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="ruleJson != null and ruleJson != ''">#{ruleJson},</if>
+            <if test="lateMm != null">#{lateMm},</if>
+            <if test="absHalf != null">#{absHalf},</if>
+            <if test="absDay != null">#{absDay},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateCwaRule" parameterType="CwaRule">
+        update snk_cwa_rule
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="ruleJson != null and ruleJson != ''">rule_json = #{ruleJson},</if>
+            <if test="lateMm != null">late_mm = #{lateMm},</if>
+            <if test="absHalf != null">abs_half = #{absHalf},</if>
+            <if test="absDay != null">abs_day = #{absDay},</if>
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectCwaRuleById" parameterType="Long" resultMap="CwaRuleResult">
+        <include refid="selectCwaRuleVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteCwaRuleById" parameterType="Long">
+        update snk_cwa_rule set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaRuleByIds" parameterType="String">
+        update snk_cwa_rule set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

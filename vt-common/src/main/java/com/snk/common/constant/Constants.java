@@ -1,0 +1,136 @@
+package com.snk.common.constant;
+
+/**
+ * 通用常量信息
+ * 
+ * @author snk
+ */
+public class Constants
+{
+    /**
+     * UTF-8 字符集
+     */
+    public static final String UTF8 = "UTF-8";
+
+    /**
+     * GBK 字符集
+     */
+    public static final String GBK = "GBK";
+
+    /**
+     * 通用成功标识
+     */
+    public static final String SUCCESS = "0";
+
+    /**
+     * 通用失败标识
+     */
+    public static final String FAIL = "1";
+
+    /**
+     * 登录成功
+     */
+    public static final String LOGIN_SUCCESS = "Success";
+
+    /**
+     * 注销
+     */
+    public static final String LOGOUT = "Logout";
+
+    /**
+     * 注册
+     */
+    public static final String REGISTER = "Register";
+
+    /**
+     * 登录失败
+     */
+    public static final String LOGIN_FAIL = "Error";
+
+    /**
+     * 当前记录起始索引
+     */
+    public static final String PAGE_NUM = "pageNum";
+
+    /**
+     * 每页显示记录数
+     */
+    public static final String PAGE_SIZE = "pageSize";
+
+    /**
+     * 排序列
+     */
+    public static final String ORDER_BY_COLUMN = "orderByColumn";
+
+    /**
+     * 排序的方向 "desc" 或者 "asc".
+     */
+    public static final String IS_ASC = "isAsc";
+
+    /**
+     * 参数管理 cache name
+     */
+    public static final String SYS_CONFIG_CACHE = "sys-config";
+
+    /**
+     * 参数管理 cache key
+     */
+    public static final String SYS_CONFIG_KEY = "sys_config:";
+
+    /**
+     * 字典管理 cache name
+     */
+    public static final String SYS_DICT_CACHE = "sys-dict";
+
+    /**
+     * 字典管理 cache key
+     */
+    public static final String SYS_DICT_KEY = "sys_dict:";
+
+    /**
+     * 资源映射路径 前缀
+     */
+    public static final String RESOURCE_PREFIX = "/profile";
+
+    /**
+     * png
+     */
+    public static final String IMG_TYPE_PNG = "png";
+
+    /**
+     * jpg
+     */
+    public static final String IMG_TYPE_JPG = "jpg";
+
+    /**
+     * 手机号正则表达式
+     */
+    public static final String REG_PHONE = "^(13[0-9]|14[5-9]|15[0-3,5-9]|16[2,5,6,7]|17[0-8]|18[0-9]|19[0-3,5-9])\\d{8}$";
+
+    /**
+     * 控制板默认密码
+     */
+    public static final String DEFAULT_PWD = "FFFFFFFF";
+
+    /**
+     * 控制板默认SN
+     */
+    public static final String DEFAULT_SN = "SN-2024T28017061";
+
+    /**
+     * 错误提示
+     */
+    public static final String DEFAULT_ERROR_MSG = "系统错误，请联系管理员";
+
+    /**
+     * 错误代码
+     */
+    public static final String DEFAULT_ERROR_CODE = "500";
+
+
+    /**
+     * 时段默认SN
+     */
+    public static final String TIME_SLOT_DEFAULT_SN = "SYSTEM-";
+
+}

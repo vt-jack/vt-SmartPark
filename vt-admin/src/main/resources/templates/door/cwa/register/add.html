@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('手动登记')" />
+    <th:block th:include="include :: datetimepicker-css" />
+    <style type="text/css">
+        label > * {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-register-add">
+                <input id="userId" name="userId" hidden>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label is-required">姓名：</label>
+                            <div class="col-sm-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="userName" required>
+                                    <div class="input-group-btn">
+                                        <button type="button" class="btn btn-white dropdown-toggle" data-toggle="dropdown">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-right" role="menu" style="height: 200px">
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label is-required">登记类型：</label>
+                            <div class="col-sm-9">
+                                <label class="check-box" onclick="clickType(1)">
+                                    <input name="type" type="radio" th:value="1" th:text="请假" checked>
+                                </label>
+                                <label class="check-box" onclick="clickType(2)">
+                                    <input name="type" type="radio" th:value="2" th:text="调休">
+                                </label>
+                                <label class="check-box" onclick="clickType(3)">
+                                    <input name="type" type="radio" th:value="3" th:text="加班">
+                                </label>
+                                <label class="check-box" onclick="clickType(4)">
+                                    <input name="type" type="radio" th:value="4" th:text="补卡">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4" id="leaveType" >
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label is-required">请假类型：</label>
+                            <div class="col-sm-6">
+                                <select name="leaveType" class="form-control" th:with="type=${@dict.getType('snk_leave_type')}" required>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label is-required">时间段：</label>
+                            <div class="col-sm-9">
+                                <div class="input-daterange input-group">
+                                    <input type="text" class="input-sm form-control" name="startTime" id="startTime" placeholder="开始时间" disabled/>
+                                    <span class="input-group-addon">-</span>
+                                    <input type="text" class="input-sm form-control" name="endTime" id="endTime" placeholder="结束时间" disabled/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="ltDiv" class="col-sm-4">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">小时数：</label>
+                            <div class="col-sm-6">
+                                <input id="leaveTime" type="text" class="form-control" name="leaveTime" placeholder="自动计算">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">备注：</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="remark"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: bootstrap-suggest-js" />
+    <th:block th:include="include :: bootstrap-typeahead-js" />
+    <th:block th:include="include :: datetimepicker-js" />
+<script th:inline="javascript">
+    var prefix = ctx + "door/cwa/register";
+    var fdList = [];    // 法定节假日
+    var tbList = [];  // 调班
+
+    $(function () {
+        $.ajax({
+            url : ctx + "door/cwa/holiday/all",
+            type : "GET",
+            dataType: "JSON",
+            data : null,
+            async : false,
+            success : function(data) {
+                $.each(data, function (index, obj) {
+                    var holiday = [];
+                    if (!$.common.isEmpty(obj.holiday)) {
+                        holiday = obj.holiday.split(",");
+                    }
+                    var tbDate = [];
+                    if (!$.common.isEmpty(obj.tbDate)) {
+                        tbDate = obj.tbDate.split(",");
+                    }
+                    $.each(holiday, function (i, o) {
+                        if (!fdList.includes(o)) {
+                            fdList.push(o);
+                        }
+                    })
+                    $.each(tbDate, function (i, o) {
+                        if (!tbList.includes(o)) {
+                            tbList.push(o);
+                        }
+                    })
+                });
+            }
+        });
+    })
+
+    $("#startTime").datetimepicker({
+        format: 'yyyy-mm-dd hh:ii:00',
+        todayBtn:  true,
+        autoclose: true,
+        minuteStep: 30
+    }).on('changeDate', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var startTime = event.date;
+        $('#endTime').datetimepicker('setStartDate', startTime);
+        validTime(startTime, null);
+    });
+
+    $("#endTime").datetimepicker({
+        format: 'yyyy-mm-dd hh:ii:00',
+        todayBtn:  true,
+        autoclose: true,
+        minuteStep: 30
+    }).on('changeDate', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        var endTime = event.date;
+        $("#startTime").datetimepicker('setEndDate', endTime);
+        validTime(null, endTime);
+    });
+
+    function clickType(type) {
+        if (1 == type) {
+            $("#leaveType").show();
+        } else {
+            $("#leaveType").hide();
+        }
+        if (3 == type) {
+            $("#leaveTime").attr("placeholder", "");
+        } else {
+            $("#leaveTime").attr("placeholder", "自动计算");
+        }
+        if (4 == type) {
+            $("#ltDiv").hide();
+            $("#startTime").attr("placeholder", "上班时间");
+            $("#endTime").attr("placeholder", "下班时间");
+        } else {
+            $("#ltDiv").show();
+            $("#startTime").attr("placeholder", "开始时间");
+            $("#endTime").attr("placeholder", "结束时间");
+        }
+        $("#startTime").val(null);
+        $("#endTime").val(null);
+        $("#leaveTime").val(null);
+    }
+
+    var ruleJson;
+    var gxList = [];    // 公休日
+    var userNameBsSuggest = $("#userName").bsSuggest({
+        url: ctx + "door/cwa/user/autoList",
+        showBtn: false,
+        idField: "id",
+        keyField: "name"
+    }).on('onSetSelectValue', function (e, selectedData, selectedRawData) {
+        var userId = selectedData.id;
+        $("#userId").val(userId);
+        $.ajax({
+            url : ctx + "door/cwa/user/" + userId,
+            type : "POST",
+            dataType: "JSON",
+            data : null,
+            async : false,
+            success : function(data) {
+                ruleJson = JSON.parse(data.ruleJson);
+                for (var i = 0; i < 7; i++) {
+                    if ($.isEmptyObject(ruleJson[i])) {
+                        gxList.push(i);
+                    }
+                }
+            }
+        });
+        $("#startTime").attr("disabled", false);
+        $("#endTime").attr("disabled", false);
+    }).on('onUnsetSelectValue', function () {
+        $("#userId").val(null);
+        $("#startTime").val(null);
+        $("#endTime").val(null);
+        $("#startTime").attr("disabled", true);
+        $("#endTime").attr("disabled", true);
+    });
+
+    function validTime(startTime, endTime) {
+        var type = $("input[name=type]:checked").val();
+        if (4 == type) {    // 补卡
+            if (!$.common.isEmpty(startTime)) {
+                checkTime(startTime, "startTime");  // 校验时间有效性
+                if ($.common.isEmpty($("#endTime").val())) {    // 补卡一次只能补一天
+                    $("#endTime").datetimepicker('setEndDate', new Date(startTime.getFullYear() + "-" + (startTime.getMonth()+1) + "-" + startTime.getDate() + " 23:59:59"));
+                }
+            } else if (!$.common.isEmpty(endTime)) {
+                checkTime(endTime, "endTime");  // 校验时间有效性
+                if ($.common.isEmpty($("#startTime").val())) {    // 补卡一次只能补一天
+                    $("#startTime").datetimepicker('setStartDate', new Date(endTime.getFullYear() + "-" + (endTime.getMonth()+1) + "-" + endTime.getDate() + " 00:00:00"));
+                }
+            }
+        } else if(3 == type) {    // 加班不做校验
+
+        } else {
+            computeTime(startTime, endTime);    // 校验时间有效性并计算小时数
+        }
+    }
+
+    function computeTime(startTime, endTime) {
+        if ($.common.isEmpty(startTime)) {
+            startTime = $("#startTime").val();
+        }
+        if ($.common.isEmpty(endTime)) {
+            endTime = $("#endTime").val();
+        }
+        if (!$.common.isEmpty(startTime) && !checkTime(startTime, "startTime")) {
+            return;
+        }
+        if (!$.common.isEmpty(endTime) && !checkTime(endTime, "endTime")) {
+            return;
+        }
+        if ($.common.isEmpty(startTime) || $.common.isEmpty(endTime)) {
+            return;
+        }
+        var sTime = new Date(startTime);
+        var eTime = new Date(endTime);
+        var sDate = new Date(sTime.getFullYear() + "-" + (sTime.getMonth() + 1) + "-" + sTime.getDate());
+        var startDate = new Date(sTime.getFullYear() + "-" + (sTime.getMonth() + 1) + "-" + sTime.getDate());
+        var endDate = new Date(eTime.getFullYear() + "-" + (eTime.getMonth() + 1) + "-" + eTime.getDate());
+        var rule, week, date;
+        var startAM, endAM, startPM, endPM;
+        var startAMArray = [], endAMArray = [], startPMArray = [], endPMArray = [];
+        var leaveTime = 0;
+        while (endDate >= startDate) {
+            date = startDate.getFullYear() + "-" + (((startDate.getMonth() + 1) < 10 ? "0" : "") + (startDate.getMonth() + 1)) + "-" + ((startDate.getDate() < 10 ? "0" : "") + startDate.getDate());
+            week = 0 == startDate.getDay() ? 6 : startDate.getDay() - 1;    // 周一至周日 0-6
+            if (tbList.includes(date)) {    // 调班
+                if (gxList.includes(week)) {    // 调班有可能是公休日 公休日是没有考勤规则的，默认使用星期一的考勤规则
+                    rule = ruleJson[0];
+                }
+            } else if (fdList.includes(date) || gxList.includes(week)) {    // 法定节假日或者公休日直接跳过
+                startDate = startDate.setDate(startDate.getDate() + 1);
+                startDate = new Date(startDate);
+                continue;
+            } else {    // 正常工作日
+                rule = ruleJson[week];
+            }
+            if (startDate.getTime() == sDate.getTime()) {
+                startAM = (sTime.getHours() < 10 ? "0" : "") + sTime.getHours() + ":" + (sTime.getMinutes() < 10 ? "0" : "") + sTime.getMinutes();
+            } else {
+                startAM = rule.am.start;
+            }
+            if (startDate.getTime() == endDate.getTime()) {
+                endPM = (eTime.getHours() < 10 ? "0" : "") + eTime.getHours() + ":" + (eTime.getMinutes() < 10 ? "0" : "") + eTime.getMinutes();
+            } else {
+                endPM = rule.pm.end;
+            }
+            startAMArray = startAM.split(":");
+            endPMArray = endPM.split(":");
+            // 计算下班时间-上班时间小时数
+            leaveTime += parseInt(endPMArray[0]) - parseInt(startAMArray[0]);
+            leaveTime += (parseInt(endPMArray[1]) - parseInt(startAMArray[1])) / 60;
+            endAM = rule.am.end;
+            startPM = rule.pm.start;
+            if (startAM <= endAM && endPM >= startPM) {
+                // 减掉休息时间
+                endAMArray = endAM.split(":");
+                startPMArray = startPM.split(":");
+                leaveTime -= parseInt(startPMArray[0]) - parseInt(endAMArray[0]);
+                leaveTime -= (parseInt(startPMArray[1]) - parseInt(endAMArray[1])) / 60;
+            }
+            startDate = startDate.setDate(startDate.getDate() + 1);
+            startDate = new Date(startDate);
+        }
+        $("#leaveTime").val(leaveTime);
+    }
+
+    function checkTime(time, id) {
+        var date = new Date(time);
+        var strDate = date.getFullYear() + "-" + (((date.getMonth() + 1) < 10 ? "0" : "") + (date.getMonth() + 1)) + "-" + ((date.getDate() < 10 ? "0" : "") + date.getDate());
+        var week = 0 == date.getDay() ? 6 : date.getDay() - 1;    // 周一至周日 0-6
+        var rule = ruleJson[week];
+        if (gxList.includes(week)) {    // 休息日
+            if (tbList.includes(strDate)) { // 调班有可能是公休日 公休日是没有考勤规则的，默认使用星期一的考勤规则
+                rule = ruleJson[0];
+            } else {
+                $.modal.alertWarning("不能选择休息日");
+                $(".layui-layer-btn0").bind("click", function(){
+                    $("#" + id).val(null);
+                });
+                return false;
+            }
+        } else if (fdList.includes(strDate)) {  // 法定节假日
+            $.modal.alertWarning("不能选择法定节假日");
+            $(".layui-layer-btn0").bind("click", function(){
+                $("#" + id).val(null);
+            });
+            return false;
+        }
+        var startAM = [], endPM = [], endAM = [], startPM = [];
+        startAM = rule.am.start.split(":");
+        endPM = rule.pm.end.split(":");
+        endAM = rule.am.end.split(":");
+        startPM = rule.pm.start.split(":");
+        var timeSlot = rule.am.start + "-" + rule.am.end + " " + rule.pm.start + "-" + rule.pm.end
+        if (date.getHours() < startAM[0] || date.getHours() > endPM[0]) {
+            $.modal.alertWarning("不在工作时间内：" + timeSlot);
+            $(".layui-layer-btn0").bind("click", function(){
+                $("#" + id).val(null);
+            });
+            return false;
+        } else if ((date.getHours() == startAM[0] && date.getMinutes() < startAM[1]) ||
+            (date.getHours() == endPM[0] && date.getMinutes() > endPM[1])) {
+            $.modal.alertWarning("不在工作时间内：" + timeSlot);
+            $(".layui-layer-btn0").bind("click", function(){
+                $("#" + id).val(null);
+            });
+            return false;
+        } else if (date.getHours() > endAM[0] && date.getHours() < startPM[0]) {
+            $.modal.alertWarning("不在工作时间内：" + timeSlot);
+            $(".layui-layer-btn0").bind("click", function(){
+                $("#" + id).val(null);
+            });
+            return false;
+        } else if ((date.getHours() == endAM[0] && date.getMinutes() > endAM[1]) ||
+            (date.getHours() == startPM[0] && date.getMinutes() < startPM[1])) {
+            $.modal.alertWarning("不在工作时间内：" + timeSlot);
+            $(".layui-layer-btn0").bind("click", function(){
+                $("#" + id).val(null);
+            });
+            return false;
+        }
+        return true;
+    }
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var type = $("input[name=type]:checked").val();
+            var startTime = $("#startTime").val();
+            var endTime = $("#endTime").val();
+            if (4 == type) {    // 补卡
+                if ($.common.isEmpty(startTime) && $.common.isEmpty(endTime)) {
+                    $.modal.alertWarning("上班时间|上班时间至少填一个");
+                    return;
+                }
+            } else {
+                if ($.common.isEmpty(startTime)) {
+                    $.modal.alertWarning("开始时间必填");
+                    return;
+                }
+                if ($.common.isEmpty(endTime)) {
+                    $.modal.alertWarning("结束时间必填");
+                    return;
+                }
+            }
+            $.operate.save(prefix + "/add", $("#form-register-add").serializeArray());
+        }
+    }
+
+</script>
+</body>
+</html>

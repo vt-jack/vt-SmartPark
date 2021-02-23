@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.DevicePositionMapper">
+
+	<resultMap type="Position" id="DevicePositionResult">
+		<id     property="id"     	  column="id"     />
+		<result property="parentId"   column="parent_id"   />
+		<result property="ancestors"  column="ancestors"   />
+		<result property="name"   	  column="name"   />
+		<result property="orderNum"   column="order_num"   />
+		<result property="comment"     column="comment"      />
+		<result property="delFlag"    column="del_flag"    />
+		<result property="parentName" column="parent_name" />
+		<result property="createBy"   column="create_by"   />
+		<result property="createTime" column="create_time" />
+		<result property="updateBy"   column="update_by"   />
+		<result property="updateTime" column="update_time" />
+	</resultMap>
+	
+	<sql id="selectPositionVo">
+        select p.id, p.parent_id, p.ancestors, p.name, p.order_num, p.comment, p.del_flag, p.create_by, p.create_time
+        from snk_device_position p
+        left join sys_user a on a.login_name = p.create_by
+    </sql>
+    
+	<select id="selectPositionList" parameterType="Position" resultMap="DevicePositionResult">
+        <include refid="selectPositionVo"/>
+        where p.del_flag = '0'
+        <if test="parentId != null and parentId != 0">
+			AND parent_id = #{parentId}
+		</if>
+		<if test="name != null and name != ''">
+			AND name like concat('%', #{name}, '%')
+		</if>
+		<!-- 数据范围过滤 -->
+		${params.dataScopeSnk}
+		order by p.parent_id, p.order_num
+    </select>
+
+	<select id="selectAllPosition" parameterType="Position" resultMap="DevicePositionResult">
+		<include refid="selectPositionVo"/>
+		where p.del_flag = '0'
+		order by p.parent_id, p.order_num
+	</select>
+	
+	<select id="checkPositionExistDevice" parameterType="Long" resultType="int">
+		select count(1) from snk_device d
+		 where d.del_flag = '0'
+		   and d.position_id = #{positionId}
+	</select>
+
+	<select id="selectPositionCount" parameterType="Position" resultType="int">
+		select count(1) from snk_device_position
+		where del_flag = '0'
+		<if test="id != null and id != 0"> and id = #{id} </if>
+		<if test="parentId != null and parentId != 0"> and parent_id = #{parentId} </if>
+	</select>
+	
+	<select id="checkPositionNameUnique" resultMap="DevicePositionResult">
+	    <include refid="selectPositionVo"/>
+		where name=#{name} and parent_id = #{parentId}
+	</select>
+
+	<select id="selectPositionById" parameterType="Long" resultMap="DevicePositionResult">
+		select p.id, p.parent_id, p.ancestors, p.name, p.order_num, p.comment,
+			(select name from snk_device_position where id = p.parent_id) parent_name
+		from snk_device_position p
+		where p.id = #{id}
+	</select>
+
+	<select id="selectChildrenPositionById" parameterType="Long" resultMap="DevicePositionResult">
+		select * from snk_device_position where find_in_set(#{id}, ancestors)
+	</select>
+	
+	<insert id="insertPosition" parameterType="Position" useGeneratedKeys="true" keyProperty="id">
+ 		insert into snk_device_position
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+ 			<if test="id != null and id != 0">id,</if>
+ 			<if test="parentId != null and parentId != 0">parent_id,</if>
+ 			<if test="name != null and name != ''">name,</if>
+ 			<if test="ancestors != null and ancestors != ''">ancestors,</if>
+ 			<if test="orderNum != null and orderNum != ''">order_num,</if>
+ 			<if test="comment != null and comment != ''">comment,</if>
+ 			<if test="createBy != null and createBy != ''">create_by,</if>
+			<if test="createTime != null">create_time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+ 			<if test="id != null and id != 0">#{id},</if>
+ 			<if test="parentId != null and parentId != 0">#{parentId},</if>
+ 			<if test="name != null and name != ''">#{name},</if>
+ 			<if test="ancestors != null and ancestors != ''">#{ancestors},</if>
+ 			<if test="orderNum != null and orderNum != ''">#{orderNum},</if>
+ 			<if test="comment != null and comment != ''">#{comment},</if>
+ 			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			<if test="createTime != null">#{createTime},</if>
+		</trim>
+	</insert>
+	
+	<update id="updatePosition" parameterType="Position">
+ 		update snk_device_position
+ 		<set>
+ 			<if test="parentId != null and parentId != 0">parent_id = #{parentId},</if>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="ancestors != null and ancestors != ''">ancestors = #{ancestors},</if>
+ 			<if test="orderNum != null and orderNum != ''">order_num = #{orderNum},</if>
+ 			<if test="comment != null and comment != ''">comment = #{comment},</if>
+ 			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+ 			update_time = sysdate()
+ 		</set>
+ 		where id = #{id}
+	</update>
+	
+	<update id="updatePositionChildren" parameterType="java.util.List">
+	    update snk_device_position set ancestors =
+	    <foreach collection="positions" item="item" index="index"
+	        separator=" " open="case id" close="end">
+	        when #{item.id} then #{item.ancestors}
+	    </foreach>
+	    where id in
+	    <foreach collection="positions" item="item" index="index"
+	        separator="," open="(" close=")">
+	        #{item.id}
+	    </foreach>
+	 </update>
+
+	<delete id="deletePositionById" parameterType="Long">
+		update snk_device_position set del_flag = '1' where id = #{id}
+	</delete>
+	
+</mapper>

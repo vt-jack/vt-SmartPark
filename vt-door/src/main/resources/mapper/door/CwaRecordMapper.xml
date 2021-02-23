@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaRecordMapper">
+
+    <resultMap type="CwaRecord" id="CwaRecordResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="year"    column="year"    />
+        <result property="month"    column="month"    />
+        <result property="beWork"    column="be_work"    />
+        <result property="doWork"    column="do_work"    />
+        <result property="lateCount"    column="late_count"    />
+        <result property="lateM"    column="late_m"    />
+        <result property="outCount"    column="out_count"    />
+        <result property="outM"    column="out_m"    />
+        <result property="absenceCount"    column="absence_count"    />
+        <result property="absenceM"    column="absence_m"    />
+        <result property="leaveCount"    column="leave_count"    />
+        <result property="leaveH"    column="leave_h"    />
+        <result property="fellowCount"    column="fellow_count"    />
+        <result property="fellowH"    column="fellow_h"    />
+        <result property="otCount"    column="ot_count"    />
+        <result property="otH"    column="ot_h"    />
+        <result property="absCount"    column="abs_count"    />
+        <result property="absD"    column="abs_d"    />
+        <result property="reCard"    column="re_card"    />
+        <result property="itemJson"    column="item_json"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaRecordVo">
+        select a.id, a.user_id, b.name as user_name, a.year, a.month, a.be_work, a.do_work, a.late_count, a.late_m, a.absence_count,
+               a.absence_m, a.out_count, a.out_m, a.leave_count, a.leave_h, a.fellow_count, a.fellow_h, a.ot_count, a.ot_h, a.abs_count,
+               a.abs_d, a.re_card, a.item_json, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_record a
+          left join snk_user b on b.id = a.user_id
+    </sql>
+
+    <select id="selectCwaRecordList" parameterType="CwaRecord" resultMap="CwaRecordResult">
+        <include refid="selectCwaRecordVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="year != null and year != ''"> and a.year = #{year}</if>
+            <if test="month != null and month != ''"> and a.month = #{month}</if>
+            <if test="userId != null"> and a.user_id = #{userId}</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.year, a.month desc
+    </select>
+
+    <insert id="insertCwaRecord" parameterType="CwaRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_record(user_id, year, month, be_work, do_work, late_count, late_m, out_count, out_m, absence_count,
+                                   absence_m, leave_count, leave_h, fellow_count, fellow_h, ot_count, ot_h, abs_count,
+                                   abs_d, re_card, item_json, create_by, create_time)
+             values (#{userId}, #{year}, #{month}, #{beWork}, #{doWork}, #{lateCount}, #{lateM}, #{outCount}, #{outM}, #{absenceCount},
+                     #{absenceM}, #{leaveCount}, #{leaveH}, #{fellowCount}, #{fellowH}, #{otCount}, #{otH}, #{absCount},
+                     #{absD}, #{reCard}, #{itemJson}, #{createBy}, sysdate())
+    </insert>
+
+    <update id="updateCwaRecord" parameterType="CwaRecord">
+        update snk_cwa_record
+           set be_work = #{beWork},
+               do_work = #{doWork},
+               late_count = #{lateCount},
+               late_m = #{lateM},
+               out_count = #{outCount},
+               out_m = #{outM},
+               absence_count = #{absenceCount},
+               absence_m = #{absenceM},
+               leave_count = #{leaveCount},
+               leave_h = #{leaveH},
+               fellow_count = #{fellowCount},
+               fellow_h = #{fellowH},
+               ot_count = #{otCount},
+               ot_h = #{otH},
+               abs_count = #{absCount},
+               abs_d = #{absD},
+               re_card = #{reCard},
+               item_json = #{itemJson},
+               update_by = #{updateBy},
+               update_time = sysdate()
+         where month = #{month}
+           and year = #{year}
+           and user_id = #{userId}
+    </update>
+
+    <select id="selectCwaRecordById" parameterType="Long" resultMap="CwaRecordResult">
+        <include refid="selectCwaRecordVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteCwaRecordById" parameterType="Long">
+        update snk_cwa_record set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaRecordByIds" parameterType="String">
+        update snk_cwa_record set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

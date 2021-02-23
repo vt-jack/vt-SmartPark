@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:include="include :: header('考勤报表详情')" />
+    <style type="text/css">
+        .time {
+            width: 40px;
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+        }
+
+        .db {
+            border: 1px dashed #ec7e70;
+            padding: 5px 0px 5px 0px;
+        }
+
+        .padding {
+            padding: 2px 2px 2px 2px;
+        }
+
+        .remark {
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+        }
+
+        .week {
+            border: 1px solid #e5e6e7;
+            border-radius: 90px;
+            float: right;
+            font-size: xx-small;
+            padding: 0px 1px 0px 1px;
+        }
+
+        .cr {
+            background: crimson;
+            color: white;
+        }
+
+        .re {
+            background: rebeccapurple;
+            color: white;
+        }
+
+        .da {
+            background: darkorange;
+            color: white;
+        }
+
+        .si {
+            background: sienna;
+            color: white;
+        }
+
+        .ye {
+            background: yellowgreen;
+            color: white;
+        }
+
+        .ro {
+            background: royalblue;
+            color: white;
+        }
+
+        .fo {
+            background: forestgreen;
+            color: white;
+        }
+
+        .gr {
+            background: grey;
+            color: white;
+        }
+
+        .wg {
+            background: white;
+            color: black;
+        }
+
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-rule-edit" th:object="${record}">
+                <input name="id" th:field="*{id}" type="hidden">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <div class="form-group">
+                            <label class="col-sm-6">姓名：[[${record.userName}]]</label>
+                            <label class="col-sm-6">[[${record.year}]]年[[${record.month}]]月</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="remark padding cr">K</label> 旷工&nbsp;
+                    <label class="remark padding cr">K(0.5)</label> 旷工半天&nbsp;
+                    <label class="remark padding re">A</label> 缺勤&nbsp;
+                    <label class="remark padding da">C</label> 迟到&nbsp;
+                    <label class="remark padding da">Z</label> 早退&nbsp;
+                    <label class="remark padding si">Q</label> 请假&nbsp;
+                    <label class="remark padding ye">B</label> 补卡&nbsp;
+                    <label class="remark padding ro">T</label> 调休&nbsp;
+                    <label class="remark padding fo">X</label> 休息日&nbsp;
+                    <label class="remark padding gr">F</label> 法定节假日&nbsp;
+                </div>
+            </form>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        $(function () {
+            var yyyyMM = [[${record.year}]] + "-" + [[${record.month}]] + "-";
+            var itemJson = JSON.parse([[${record.itemJson}]]);
+            var day, week;
+            var weekList = ["日", "一", "二", "三", "四", "五", "六"];
+            var cls;
+            var html = "";
+            $.each(itemJson, function (index, obj) {
+                if (index % 3 == 0) {
+                    html += '<div class="row">';
+                }
+                html += '<div class="col-sm-4">';
+                html += '<div class="form-group col-sm-11 db">';
+                html += '<div class="col-sm-12" style="text-align: center">';
+                day = yyyyMM + (index < 9 ? "0" : "") + (index + 1);
+                week = new Date(day).getDay();
+                cls = "wg";
+                if (week == 6 || week == 0) {
+                    cls = "fo";
+                }
+                html += day + '<label class="week ' + cls + '">' + weekList[week] + '</label>';
+                html += '</div>';
+                html += '<div class="padding col-sm-5"><div class="padding">上:<input type="text" class="time padding" value="' + obj.sw + '" disabled></div><div class="padding">下:<input type="text" class="time" value="' + obj.dw + '" disabled></div></div>'
+                html += '<div class="col-sm-7 padding">';
+                $.each(obj.remark, function (i, o) {
+                    if (o.indexOf("K") != -1) { // 旷工
+                        cls = "cr";
+                    } else if (o.indexOf("A") != -1) { // 缺勤
+                        cls = "re";
+                    } else if (o.indexOf("C") != -1) {  // 迟到
+                        cls = "da";
+                    } else if (o.indexOf("Z") != -1) {  // 早退
+                        cls = "da";
+                    } else if (o.indexOf("Q") != -1) {  // 请假
+                        cls = "si";
+                    } else if (o.indexOf("B") != -1) {  // 补卡
+                        cls = "ye";
+                    } else if (o.indexOf("T") != -1) {  // 调休
+                        cls = "ro";
+                    } else if (o.indexOf("X") != -1) {  //  休息日
+                        cls = "fo";
+                    } else if (o.indexOf("F") != -1) {  //  法定节假日
+                        cls = "gr";
+                    }
+                    html += '<label class="remark padding ' + cls + '">' + o + '</label>&nbsp;'
+                })
+                html += '</div>';
+                html += '</div>';
+                html += '</div>';
+                if ((index - 2) % 3 == 0) {
+                    html += '</div>';
+                }
+            });
+            $("#form-rule-edit").append(html);
+        })
+    </script>
+</body>
+</html>

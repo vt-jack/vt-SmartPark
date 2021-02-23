@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('socket-自定义')" />
+</head>
+<body class="gray-bg">
+    <div class="col-sm-12 select-table table-striped">
+        <table id="bootstrap-table"></table>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:src="@{/js/socket.io.js}"></script>
+    <script th:inline="javascript">
+    var recordType = [[${@dict.getType('snk_record_type')}]];
+    var recordFgType = [[${@dict.getType('snk_fg_record_type')}]];
+
+    $(function() {
+        var options = {
+            showSearch: false,
+            showRefresh: false,
+            showColumns: false,
+            showToggle: false,
+            showPageGo: false,
+            pagination: false,
+            uniqueId: "id",
+            modalName: "",
+            columns: [{
+                field: 'id',
+                title: '主键',
+                visible: false
+            },
+            {
+                field: 'sn',
+                title: 'SN'
+            },
+            {
+                field: 'deviceName',
+                title: '设备名称'
+            },
+            {
+                field: 'positionName',
+                title: '安装位置'
+            },
+            {
+                field: 'operation',
+                title: '操作类型',
+                formatter: function () {
+                    return [[${describe}]];
+                }
+            },
+            {
+                field: 'recordType',
+                title: '记录类型',
+                visible: false,
+                formatter: function(value, row, index) {
+                    if ("1" == parent.param.deviceType) {
+                        return $.table.selectDictLabel(recordType, value);
+                    } else {
+                        return $.table.selectDictLabel(recordFgType, value);
+                    }
+                }
+            },
+            {
+                field: 'recordNum',
+                title: '已采集|剩余',
+                visible: false,
+                formatter: function(value) {
+                    return "<span style='color: green;'>" + value + "</span>"
+                }
+            },
+            {
+                field: 'result',
+                title: '操作结果',
+                formatter: function(value) {
+                    value = $.common.isEmpty(value) ? "请稍后..." : value;
+                    return "<span style='color: blue;'>" + value + "</span>"
+                }
+            }]
+        };
+        $.table.init(options);
+        if (parent.clear) { // 清除记录
+            $("#bootstrap-table").bootstrapTable('hideColumn', 'deviceName');
+            $("#bootstrap-table").bootstrapTable('hideColumn', 'positionName');
+        } else if (parent.collect) {    // 采集记录
+            $("#bootstrap-table").bootstrapTable('hideColumn', 'deviceName');
+            $("#bootstrap-table").bootstrapTable('hideColumn', 'positionName');
+            $("#bootstrap-table").bootstrapTable('hideColumn', 'operation');
+            $("#bootstrap-table").bootstrapTable('showColumn', 'recordType');
+            $("#bootstrap-table").bootstrapTable('showColumn', 'recordNum');
+        }
+    });
+
+    var socket;
+    connect();
+    function connect() {
+        var opts = {
+            query: 'userId=' + [[${@permission.getPrincipalProperty('userId')}]]
+        };
+        var host = [[${@config.getSocketIOHost()}]];
+        var port = [[${@config.getSocketIOPort()}]];
+        socket = io.connect('http://' + host + ':' + port, opts);
+
+        socket.on('connect', function () {
+            // 写入表格
+            if (parent.clear) { // 清空操作
+                $("#bootstrap-table").bootstrapTable('insertRow', {
+                    index: 0,
+                    row: {
+                        id: parent.param.sn,
+                        sn: parent.param.sn,
+                    }
+                });
+            } else if (parent.pwd) {    // 开门密码
+                $.each(parent.param.param, function (index, obj) {
+                    $("#bootstrap-table").bootstrapTable('insertRow', {
+                        index: $("#bootstrap-table").bootstrapTable('getData').length,
+                        row: {
+                            id: obj.deviceName + obj.password,
+                            sn: obj.sn,
+                            deviceName: obj.deviceName,
+                            positionName: obj.positionName
+                        }
+                    });
+                });
+            }else if(parent.grant) {    // 授权
+                $.each(parent.deviceList, function (index, obj) {
+                    $("#bootstrap-table").bootstrapTable('insertRow', {
+                        index: $("#bootstrap-table").bootstrapTable('getData').length,
+                        row: {
+                            id: obj.sn + obj.id,
+                            sn: obj.sn,
+                            deviceName: obj.name,
+                            positionName: obj.positionName
+                        }
+                    });
+                });
+            } else if (parent.collect) {    // 采集记录
+                    var count = 7;
+                    if (parent.param.deviceType != "1") {   // 人脸|指纹机
+                        count = 5;
+                    }
+                    for (var i = 1; i < count; i++) {
+                        $("#bootstrap-table").bootstrapTable('insertRow', {
+                            index: i-1,
+                            row: {
+                                id: i,
+                                recordType: i,
+                                sn: parent.param.sn,
+                                recordNum: ""
+                            }
+                        });
+                    }
+            }
+
+            // 调用api
+            var url = ctx + [[${url}]];
+            $.ajax({
+                url: url,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(parent.param),
+                success: function(result) {
+
+                }
+            });
+        });
+
+        socket.on('custom', function (event) {
+            var content = JSON.parse(event.content);
+            if(parent.clear) {
+                $("#bootstrap-table").bootstrapTable('updateByUniqueId', {
+                    id: content.sn,
+                    row: {
+                        result: content.result
+                    }
+                });
+            } else if (parent.collect) {   // 采集记录
+                if ("500" == event.code) {
+                    var rows = $("#bootstrap-table").bootstrapTable("getData");
+                    $.each(rows, function (index, obj) {
+                        $("#bootstrap-table").bootstrapTable('updateRow', {
+                            index: index,
+                            row: {
+                                result: content.result
+                            }
+                        });
+                    });
+                    return;
+                }
+                var result = content.param;
+                var recordNum = "0|0";
+                if (!$.common.isEmpty(result.recordNum)) {
+                    var newRsp = [];
+                    newRsp = result.recordNum.split("|");
+                    recordNum = newRsp[0] + "|" + newRsp[1];
+                }
+                $("#bootstrap-table").bootstrapTable('updateByUniqueId', {
+                    id: result.recordType,
+                    row: {
+                        recordNum: recordNum,
+                        result: result.result
+                    }
+                });
+            } else if(parent.pwd) {
+                var result = content.param;
+                $.each(result, function (index, obj) {
+                    $("#bootstrap-table").bootstrapTable('updateByUniqueId', {
+                        id: obj.deviceName + obj.password,
+                        row: {
+                            result: obj.result
+                        }
+                    });
+                });
+            } else if(parent.grant) {
+                var rows = $("#bootstrap-table").bootstrapTable("getData");
+                $.each(rows, function (index, obj) {
+                    if (obj.sn == content.sn) {
+                        $("#bootstrap-table").bootstrapTable('updateByUniqueId', {
+                            id: obj.id,
+                            row: {
+                                result: content.result
+                            }
+                        });
+                    }
+                });
+            }
+            if (!$.common.isEmpty(parent.tableId)) {
+                parent.$("#" + parent.tableId).bootstrapTable("refresh");
+            } else if (!$.common.isEmpty(parent.parent.tableId)) {
+                parent.parent.$("#" + parent.parent.tableId).bootstrapTable("refresh");
+            }
+        });
+
+        socket.on('disconnect', function () {
+        });
+    }
+
+</script>
+</body>
+</html>

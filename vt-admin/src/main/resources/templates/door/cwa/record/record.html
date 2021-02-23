@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('考勤报表列表')" />
+</head>
+<body class="gray-bg">
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <form id="formId" role="form" class="form-inline">
+                    <input id="userId" name="userId" hidden>
+                    <div class="form-group">
+                        <label class="control-label">年度：</label>
+                        <select id="year" name="year" class="form-control" required>
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <label class="control-label">月份：</label>
+                        <select id="month" name="month" class="form-control" required>
+                            <option value="">请选择</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="userName" placeholder="姓名">
+                            <div class="input-group-btn">
+                                <button type="button" class="btn btn-white dropdown-toggle" data-toggle="dropdown">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-right" role="menu" style="height: 200px">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="padding-top: 5px; padding-left: 50px">
+                        <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                        <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="btn-group-sm" id="toolbar" role="group">
+                        <a class="btn btn-primary" onclick="init()" shiro:hasPermission="door:cwaRecord:init">
+                            <i class="fa fa-plus"></i> 生成报表
+                        </a>
+                        <a class="btn btn-warning" onclick="exExcel()" shiro:hasPermission="door:cwaRecord:export">
+                            <i class="fa fa-download"></i> 导出
+                        </a>
+                    </div>
+                    <div class="col-sm-12 select-table table-striped">
+                        <table id="bootstrap-table"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: bootstrap-suggest-js" />
+    <th:block th:include="include :: bootstrap-typeahead-js" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('door:cwaRecord:detail')}]];
+        var prefix = ctx + "door/cwa/record";
+
+        $(function() {
+            var options = {
+                uniqueId: "id",
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                exportUrl: prefix + "/export",
+                clickToSelect: true,
+                modalName: "考勤记录",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'userName',
+                    title: '姓名'
+                },
+                {
+                    field: 'year',
+                    title: '年度'
+                },
+                {
+                    field: 'month',
+                    title: '月份'
+                },
+                {
+                    field: 'beWork',
+                    title: '应出勤天数'
+                },
+                {
+                    field: 'doWork',
+                    title: '实际出勤天数'
+                },
+                {
+                    field: 'lateCount',
+                    title: '迟到次数'
+                },
+                {
+                    field: 'lateM',
+                    title: '迟到(分钟)'
+                },
+                {
+                    field: 'outCount',
+                    title: '早退次数'
+                },
+                {
+                    field: 'outM',
+                    title: '早退(分钟)'
+                },
+                {
+                    field: 'absenceCount',
+                    title: '缺勤次数'
+                },
+                {
+                    field: 'absenceM',
+                    title: '缺勤(分钟)'
+                },
+                {
+                    field: 'leaveCount',
+                    title: '请假次数'
+                },
+                {
+                    field: 'leaveH',
+                    title: '请假(小时)'
+                },
+                {
+                    field: 'fellowCount',
+                    title: '调休次数'
+                },
+                {
+                    field: 'fellowH',
+                    title: '调休(小时)'
+                },
+                {
+                    field: 'otCount',
+                    title: '加班次数'
+                },
+                {
+                    field: 'otH',
+                    title: '加班(小时)'
+                },
+                {
+                    field: 'absCount',
+                    title: '旷工次数'
+                },
+                {
+                    field: 'absD',
+                    title: '旷工天数'
+                },
+                {
+                    field: 'reCard',
+                    title: '补卡次数'
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="detail(\'' + row.id + '\')"><i class="fa fa-edit"></i>详情</a> ');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+
+        var userNameBsSuggest = $("#userName").bsSuggest({
+            url: ctx + "door/cwa/user/autoList",
+            showBtn: false,
+            idField: "id",
+            keyField: "name"
+        }).on('onSetSelectValue', function (e, selectedData, selectedRawData) {
+            $("#userId").val(selectedData.id);
+        }).on('onUnsetSelectValue', function () {
+            $("#userId").val(null);
+        });
+
+        $(function () {
+            for (var i = 2020; i <= 2089; i++) {
+                $("#year").append("<option value=" + i + ">" + i + "</option>");
+            }
+            for (var i = 1; i <= 12; i++) {
+                $("#month").append("<option value=" + i + ">" + i + "</option>");
+            }
+        });
+
+        function exExcel() {
+            if ($.validate.form()) {
+                $.table.exportExcel();
+            }
+        }
+        
+        function init() {
+            if ($.validate.form()) {
+                $.ajax({
+                    url: prefix + "/init",
+                    type: "POST",
+                    dataType: "JSON",
+                    data: $("#formId").serializeArray(),
+                    beforeSend: function () {
+                        $.modal.loading("正在处理中，请稍后...");
+                        $.modal.disable();
+                    },
+                    success: function (result) {
+                        $.modal.closeLoading();
+                        $.modal.enable();
+                        $.modal.alertSuccess("操作成功，请点击搜索刷新表格查看结果");
+                    }
+                });
+            }
+        }
+
+        function detail(id) {
+            $.modal.open("考勤详情", prefix + "/detail/" + id, null, null, null, true);
+        }
+
+    </script>
+</body>
+</html>

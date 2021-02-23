@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改设备型号')" />
+    <style type="text/css">
+        .image {
+            width: 160px;
+            height: 160px;
+        }
+
+        .scheme {
+            width: 437px;
+            height: 324px;
+        }
+
+        /*选择文件上传*/
+        .new-upload {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .new-upload input[type=file] {
+            position: absolute;
+            display: none;
+        }
+
+        .tc {
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-model-edit" th:object="${model}">
+        <input name="id" th:field="*{id}" type="hidden">
+        <div class="tabs-container">
+            <ul class="nav nav-tabs">
+                <li id="nav-1" class="active">
+                    <a data-toggle="tab" href="#tab-1" aria-expanded="true">基本信息</a>
+                </li>
+                <li id="nav-2" class="">
+                    <a data-toggle="tab" href="#tab-2" aria-expanded="false">接线图</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label class="col-sm-2 control-label"></label>
+                                <label class="col-sm-8 control-label">
+                                    <div class="user-info-head action">
+                                        <a href="javascript:void(0)"><label for="inputImage"><img class="image" id="image" th:src="(*{image} == null) ? @{/img/default.jpg} : @{*{image}}"></label> </a>
+                                    </div>
+                                    <div class="new-upload tc">
+                                        <input type="file" name="image" id="inputImage" accept="image/*"/>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label is-required">设备型号：</label>
+                                    <div class="col-sm-8">
+                                        <input id="model" name="model" class="form-control" type="text" th:field="*{model}" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label is-required">设备类型：</label>
+                                    <div class="col-sm-8">
+                                        <select id="deviceType" name="deviceType" class="form-control m-b" th:with="type=${@dict.getType('snk_device_type')}" onchange="selectDeviceType()" required>
+                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{deviceType}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label is-required">控制门数量：</label>
+                                    <div class="col-sm-8">
+                                        <select name="port" class="form-control m-b" th:with="type=${@dict.getType('snk_model_port')}" required>
+                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{port}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="c_type" class="form-group">
+                                    <label class="col-sm-4 control-label is-required">控制板类型：</label>
+                                    <div class="col-sm-8">
+                                        <select id="type" name="type" class="form-control m-b" th:with="type=${@dict.getType('snk_model_type')}" required>
+                                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{type}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-8">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label">描述：</label>
+                                    <div class="col-sm-8">
+                                        <textarea name="comment" class="form-control" type="text" th:field="*{comment}"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="tab-2" class="tab-pane">
+                    <div class="panel-body" style="text-align: center">
+                        <div class="user-info-head action">
+                            <a href="javascript:void(0)"><label for="inputScheme"><img class="scheme" id="scheme" th:src="(*{conScheme} == null) ? @{/img/default.jpg} : @{*{conScheme}}"></label> </a>
+                        </div>
+                        <div class="new-upload tc">
+                            <input type="file" name="scheme" id="inputScheme" accept="image/*"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "door/device/model"
+
+        $(function() {
+           selectDeviceType();
+        });
+
+        $("#form-model-edit").validate({
+            ignore : "",//验证隐藏域,解决切换标签后隐藏域无法验证问题
+            onkeyup: false,
+            rules:{
+                model:{
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function() {
+                                return $.common.trim($("#id").val());
+                            },
+                            "model": function() {
+                                return $.common.trim($("#model").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+            },
+            messages: {
+                "model": {
+                    remote: "设备型号已存在"
+                }
+            },
+            focusCleanup: true
+        });
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var data = $("#form-model-edit").serializeArray();
+                var defaultImg = "/img/default.jpg";
+                data.push({"name": "image", "value": defaultImg == $("#image").attr("src") ? null : $("#image").attr("src")});
+                data.push({"name": "conScheme", "value": defaultImg == $("#scheme").attr("src") ? null : $("#scheme").attr("src")});
+                var model = {};
+                $.each(data, function(i, obj){
+                    model[obj.name] = obj.value;
+                });
+                $.ajax({
+                    url : prefix + "/edit",
+                    type : "POST",
+                    contentType: "application/json",
+                    data : JSON.stringify(model),
+                    beforeSend: function () {
+                        $.modal.loading("正在处理中，请稍后...");
+                        $.modal.disable();
+                    },
+                    success: function(result) {
+                        if (typeof callback == "function") {
+                            callback(result);
+                        }
+                        $.operate.successCallback(result);
+                    }
+                });
+            } else {
+                if (!$("#nav-1").hasClass("active")) {
+                    $("#nav-2").removeClass("active");
+                    $("#tab-2").removeClass("active");
+                    $("#nav-1").addClass("active");
+                    $("#tab-1").addClass("active");
+                }
+            }
+        }
+
+        $('#inputImage').on('change', function() {
+            var reader = new FileReader();
+            var file = $('#inputImage')[0].files[0];
+            if (/^image\/\w+$/.test(file.type)) {
+                //当读取成功后触发
+                reader.readAsDataURL(file);
+                reader.onload=function(){
+                    document.getElementById("image").src = reader.result;
+                };
+            } else {
+                $.modal.alertWarning('请选择一个图片文件。');
+            }
+        });
+
+        $('#inputScheme').on('change', function() {
+            var reader = new FileReader();
+            var file = $('#inputScheme')[0].files[0];
+            if (/^image\/\w+$/.test(file.type)) {
+                //当读取成功后触发
+                reader.readAsDataURL(file);
+                reader.onload=function(){
+                    document.getElementById("scheme").src = reader.result;
+                };
+            } else {
+                $.modal.alertWarning('请选择一个图片文件。');
+            }
+        });
+
+        function selectDeviceType() {
+            var deviceType = $("#deviceType").val();
+            if (1 == deviceType) {
+                $("#c_type").show();
+                $("#type").attr("required", true);
+            } else {
+                $("#c_type").hide();
+                $("#type").attr("required", false);
+            }
+        }
+    </script>
+</body>
+</html>

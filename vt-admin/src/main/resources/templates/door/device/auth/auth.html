@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('设备权限列表')" />
+    <th:block th:include="include :: layout-latest-css" />
+    <th:block th:include="include :: ztree-css" />
+</head>
+<body class="gray-bg">
+    <div class="ui-layout-west">
+        <div class="box box-main">
+            <div class="box-header">
+                <div class="box-title">
+                    <i class="fa icon-grid"></i> 设备位置
+                </div>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="btnExpand" title="展开" style="display:none;"><i class="fa fa-chevron-up"></i></button>
+                    <button type="button" class="btn btn-box-tool" id="btnCollapse" title="折叠"><i class="fa fa-chevron-down"></i></button>
+                    <button type="button" class="btn btn-box-tool" id="btnRefresh" title="刷新位置"><i class="fa fa-refresh"></i></button>
+                </div>
+            </div>
+            <div class="ui-layout-content">
+                <div id="tree" class="ztree"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layout-center">
+        <div class="container-div">
+            <div class="row">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId">
+                        <input type="hidden" id="positionId" name="positionId">
+                        <input type="hidden" id="parentId" name="parentId">
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>姓名：</label>
+                                    <input type="text" name="userName"/>
+                                </li>
+                                <li>
+                                    <label>SN：</label>
+                                    <input type="text" name="sn"/>
+                                </li>
+                                <li>
+                                    <label>设备名称：</label>
+                                    <input type="text" name="deviceName"/>
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="btn-group-sm" id="toolbar" role="group">
+                    <a id="upload" class="btn btn-success multiple disabled" onclick="upload()" shiro:hasPermission="door:auth:upload">
+                        <i class="fa fa-upload"></i> 上传权限
+                    </a>
+                    <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="door:auth:remove">
+                        <i class="fa fa-upload"></i> 删除
+                    </a>
+                    <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="door:auth:export">
+                        <i class="fa fa-download"></i> 导出
+                    </a>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: layout-latest-js" />
+    <th:block th:include="include :: ztree-js" />
+    <script th:inline="javascript">
+        var specialType = [[${@dict.getType('snk_special_type')}]];
+        var uploadStatus = [[${@dict.getType('snk_upload_status')}]];
+        var delFlag = [[${@dict.getType('snk_del_flag')}]];
+        var limitFlag = [[${@dict.getType('snk_limit_flag')}]];
+        var cardStatus = [[${@dict.getType('snk_card_status')}]];
+        var prefix = ctx + "door/device/auth";
+        var param;
+        var loginName = [[${@permission.getPrincipalProperty('loginName')}]];
+
+        $(function() {
+            var panehHidden = false;
+            if ($(this).width() < 769) {
+                panehHidden = true;
+            }
+            $('body').layout({ initClosed: panehHidden, west__size: 185 });
+            queryDeviceList();
+            queryPositionTree();
+        });
+
+        function queryDeviceList() {
+            var options = {
+                uniqueId: "id",
+                url: prefix + "/list",
+                removeUrl: prefix + "/remove",
+                exportUrl: prefix + "/export",
+                clickToSelect: true,
+                modalName: "权限列表",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'admin',
+                    title: '身份',
+                    formatter: function(value, row, index) {
+                        if (value == '1') {
+                            return "<span style='color: green;'>管理员</span>";
+                        } else if (value == '2') {
+                            return "<span style='color: orange;'>访客</span>";
+                        }
+                        return "用户";
+                    }
+                },
+                {
+                    field: 'userName',
+                    title: '姓名'
+                },
+                {
+                    field: 'deptName',
+                    title: '部门'
+                },
+                {
+                    field: 'proof',
+                    title: '凭证',
+                    formatter: function (value, row, index) {
+                        var html = "";
+                        if (!$.common.isEmpty(row.cardNo)) {
+                            html += "<i class='fa fa fa-vcard' title='卡号'></i>" + ($.common.isEmpty(row.cardNo) ? "" : row.cardNo);
+                        }
+                        if (!$.common.isEmpty(row.photo)) {
+                            if (!$.common.isEmpty(html)) {
+                                html += "<br/>";
+                            }
+                            html += $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s' title='头像'/>", 'auto', 'auto', 'self', row.photo);
+                        }
+                        if (!$.common.isEmpty(row.finger)) {
+                            if (!$.common.isEmpty(html)) {
+                                html += "<br/>";
+                            }
+                            html += "<i class='fa fa-hand-pointer-o' title='指纹'></i>" + ($.common.isEmpty(row.finger) ? "" : JSON.parse(row.finger).length);
+                        }
+                        return html;
+                    }
+                },
+                {
+                    field: 'sn',
+                    title: 'SN'
+                },
+                {
+                    field: 'deviceName',
+                    title: '设备名称'
+                },
+                {
+                    field: 'positionName',
+                    title: '安装位置'
+                },
+                {
+                    field: 'special',
+                    title: '特殊权限',
+                    formatter: function(value, row, index) {
+                        return $.table.selectDictLabel(specialType, value);
+                    }
+                },
+                {
+                    field: 'slotName',
+                    title: '开门时段'
+                },
+                {
+                    field: 'expTime',
+                    title: '有效期限'
+                },
+                {
+                    field: 'openNum',
+                    title: '开门次数',
+                    formatter: function(value, row, index) {
+                        if (value == 65535) {
+                            return "无限制";
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'holiday',
+                    title: '节假日',
+                    formatter: function(value, row, index) {
+                        return $.table.selectDictLabel(limitFlag, value);
+                    }
+                },
+                {
+                    field: 'cardStatus',
+                    title: '卡片状态',
+                    formatter: function(value, row, index) {
+                        var dictLabel = $.table.selectDictLabel(cardStatus, value);
+                        if (value == '2') {
+                            return "<span style='color: red;'>" + dictLabel + "</span>";
+                        }
+                        return dictLabel;
+                    }
+                },
+                {
+                    field: 'status',
+                    title: '状态',
+                    formatter: function(value, row, index) {
+                        var dictLabel = $.table.selectDictLabel(uploadStatus, value);
+                        if (value == '0') {
+                            return "<span style='color: red;'>" + dictLabel + "</span>";
+                        }
+                        return "<span style='color: green;'>" + dictLabel + "</span>";
+                    }
+                },
+                {
+                    field: 'remark',
+                    title: '备注',
+                    formatter: function(value, row, index) {
+                        if (!$.common.isEmpty(value)) {
+                            return "<span style='color: red;'>" + value + "</span>";
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'delFlag',
+                    title: '删除标识',
+                    formatter: function(value, row, index) {
+                        var dictLabel = $.table.selectDictLabel(delFlag, value);
+                        if (value == '0') {
+                            return dictLabel;
+                        }
+                        return "<span style='color: red;'>" + dictLabel + "</span>";
+                    }
+                }]
+            };
+            $.table.init(options);
+        }
+
+        function queryPositionTree()
+        {
+            var url = ctx + "door/device/position/treeData";
+            var options = {
+                url: url,
+                expandLevel: 2,
+                onClick : zOnClick
+            };
+            $.tree.init(options);
+
+            function zOnClick(event, treeId, treeNode) {
+                $("#positionId").val(treeNode.id);
+                $("#parentId").val(treeNode.pId);
+                $.table.search();
+            }
+        }
+
+        $('#btnExpand').click(function() {
+            $._tree.expandAll(true);
+            $(this).hide();
+            $('#btnCollapse').show();
+        });
+
+        $('#btnCollapse').click(function() {
+            $._tree.expandAll(false);
+            $(this).hide();
+            $('#btnExpand').show();
+        });
+
+        $('#btnRefresh').click(function() {
+            queryPositionTree();
+        });
+
+        function upload() {
+            var table = $("#bootstrap-table").bootstrapTable("getSelections");
+            if (table.length == 0) {
+                $.modal.alertWarning("请至少选择一条记录");
+                return null;
+            }
+            var authList = [];
+            $.each(table, function (index, obj) {
+                var auth = {
+                    "userId": obj.userId,
+                    "cardNo": obj.cardNo,
+                    "userNo": obj.userNo,
+                    "photo": obj.photo,
+                    "deptName": obj.deptName,
+                    "postName": obj.postName,
+                    "userName": obj.userName,
+                    "sn": obj.sn,
+                    "deviceId": obj.deviceId,
+                    "controlPort": obj.controlPort,
+                    "slotId": obj.slotId,
+                    "slotIdx": obj.slotIdx,
+                    "openNum": obj.openNum,
+                    "holiday": obj.holiday,
+                    "special": obj.special,
+                    "expTime": obj.expTime,
+                    "cardStatus": obj.cardStatus,
+                    "status": obj.status,
+                    "admin": obj.admin,
+                    "createBy": loginName,
+                    "delFlag": obj.delFlag
+                };
+                authList.push(auth);
+            });
+            $.ajax({
+                url: prefix + "/upload",
+                type: "post",
+                contentType: "application/json",
+                data: JSON.stringify(authList),
+                beforeSend: function () {
+                    $.modal.loading("正在处理中，请稍后...");
+                    $.modal.disable();
+                },
+                success: function (result) {
+                    $.modal.closeLoading();
+                    $.modal.enable();
+                    $.modal.alertSuccess("权限上传成功，请点击搜索刷新表格查看结果");
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

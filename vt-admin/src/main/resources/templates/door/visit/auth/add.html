@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:include="include :: header('新增访问权限')" />
+    <style type="text/css">
+        .input {
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+            width: 50px;
+            height: 31px;
+        }
+
+        table {
+            font-size: 12px;
+        }
+
+        table div {
+            font-size: 12px;
+        }
+
+        .bootstrap-table .table:not(.table-condensed), .bootstrap-table .table:not(.table-condensed) > tbody > tr > td, .bootstrap-table .table:not(.table-condensed) > tbody > tr > th, .bootstrap-table .table:not(.table-condensed) > tfoot > tr > td, .bootstrap-table .table:not(.table-condensed) > tfoot > tr > th, .bootstrap-table .table:not(.table-condensed) > thead > tr > td {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-auth-add">
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label is-required">权限名称：</label>
+                        <div class="col-sm-9">
+                            <input id="authName" name="authName" class="form-control" type="text" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">开门时段：</label>
+                        <div class="col-sm-6">
+                            <select name="slotId" class="form-control m-b" required>
+                                <option value="">请选择</option>
+                                <option th:each="time:${times}" th:value="${time.id}" th:text="${time.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label is-required">开门次数：</label>
+                        <div class="col-sm-6">
+                            <select id="openNum" name="openNum" class="form-control" required>
+                                <option value="65535">无限制</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label is-required">有效期限：</label>
+                        <div class="col-sm-9">
+                            <input id="day" class="input" type="number" max="30" min="1" value="1" required>天
+                            <input id="hour" class="input" type="number" max="23" min="0" value="0" required>小时
+                            <input id="minute" class="input" type="number" max="59" min="0" value="0" required>分钟
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </form>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="col-sm-12 select-table table-striped">
+                        <table id="bootstrap-table1"></table>
+                    </div>
+                </div>
+                <div class="col-sm-1" style="text-align: center; padding-top: 20px">
+                    <div class="btn-group-sm">
+                        <a class="btn btn-success btn-xs" onclick="addAll()" title="添加全部"> >> </a>
+                    </div><br>
+                    <div class="btn-group-sm">
+                        <a class="btn btn-success btn-xs" onclick="add()" title="添加"> &nbsp;>&nbsp; </a>
+                    </div><br><br>
+                    <div class="btn-group-sm">
+                        <a class="btn btn-success btn-xs" onclick="del()" title="删除"> &nbsp;<&nbsp; </a>
+                    </div><br>
+                    <div class="btn-group-sm">
+                        <a class="btn btn-success btn-xs" onclick="delAll()" title="删除全部"> << </a>
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="col-sm-12 select-table table-striped">
+                        <table id="bootstrap-table2"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "door/visit/auth"
+
+        $("#form-auth-add").validate({
+            onkeyup: false,
+            rules:{
+                day:{
+                    digit: true,
+                    max: 30,
+                    min: 1
+                },
+                hour:{
+                    digit: true,
+                    max: 0,
+                    min: 23
+                },
+                minute:{
+                    digit: true,
+                    max: 0,
+                    min: 59
+                },
+            },
+            focusCleanup: true
+        });
+
+        $(function () {
+            for (var i = 1; i <= 100; i++) {
+                $("#openNum").append("<option value=" + i + ">" + i + "</option>");
+            }
+        });
+
+        $(function() {
+            var options = {
+                uniqueId: "id",
+                id: "bootstrap-table1",
+                url: ctx + "door/device/list",
+                showColumns: false,
+                showToggle: false,
+                showSearch: false,
+                clickToSelect: true,
+                search: true,
+                pagination: false,
+                height: 330,
+                modalName: "可选设备",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'name',
+                    title: '设备名称'
+                },
+                {
+                    field: 'positionName',
+                    title: '安装位置'
+                }],
+                onLoadSuccess: function(data){
+                    var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+                    var ids = [];
+                    $.each(table2, function(i, obj) {
+                        ids.push(obj.id);
+                    });
+                    $("#bootstrap-table1").bootstrapTable("remove", {
+                        field: "id",
+                        values: ids
+                    });
+                }
+            };
+            $.table.init(options);
+        });
+
+        $(function() {
+            var options = {
+                uniqueId: "id",
+                id: "bootstrap-table2",
+                toolbar: "toolbar2",
+                showColumns: false,
+                showToggle: false,
+                showSearch: false,
+                clickToSelect: true,
+                pagination: false,
+                height: 330,
+                modalName: "已选设备",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'name',
+                    title: '设备名称'
+                },
+                {
+                    field: 'positionName',
+                    title: '安装位置'
+                }]
+            };
+            $.table.init(options);
+        });
+
+        function add() {
+            var table1 = $("#bootstrap-table1").bootstrapTable("getSelections");
+            if (table1.length == 0) {
+                $.modal.alertWarning("请至少选择一个设备");
+                return;
+            }
+            addDevice(table1);
+        }
+
+        function del() {
+            var table2 = $("#bootstrap-table2").bootstrapTable("getSelections");
+            if (table2.length == 0) {
+                $.modal.alertWarning("请至少选择一个设备");
+                return;
+            }
+            delDevice(table2);
+        }
+
+        function addAll() {
+            var table1 = $("#bootstrap-table1").bootstrapTable("getData");
+            if (table1.length == 0) {
+                $.modal.alertWarning("没有可以添加的设备");
+                return;
+            }
+            addDevice(table1);
+        }
+
+        function delAll() {
+            var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+            if (table2.length == 0) {
+                $.modal.alertWarning("没有可以移除的设备");
+                return;
+            }
+            delDevice(table2);
+        }
+
+        function delDevice(table2) {
+            // 添加可选数据
+            $("#bootstrap-table1").bootstrapTable('prepend', table2);
+            // 必须重新加载数据， 不然getSelections会出问题
+            $("#bootstrap-table1").bootstrapTable('load', $("#bootstrap-table1").bootstrapTable('getData'));
+            // 删除已选数据
+            var ids = [];
+            $.each(table2, function(i, obj) {
+                ids.push(obj.id);
+            });
+            $("#bootstrap-table2").bootstrapTable("remove", {
+                field: "id",
+                values: ids
+            });
+        }
+
+        function addDevice(table1) {
+            // 添加已选数据
+            $("#bootstrap-table2").bootstrapTable('prepend', table1);
+            // 必须重新加载数据， 不然getSelections会出问题
+            $("#bootstrap-table2").bootstrapTable('load', $("#bootstrap-table2").bootstrapTable('getData'));
+            // 删除可选数据
+            var ids = [];
+            $.each(table1, function(i, obj) {
+                ids.push(obj.id);
+            });
+            $("#bootstrap-table1").bootstrapTable("remove", {
+                field: "id",
+                values: ids
+            });
+        }
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+                if (table2.length == 0) {
+                    $.modal.alertWarning("请至少选择一个设备");
+                    return;
+                }
+                var data = $("#form-auth-add").serializeArray();
+                data.push({"name": "name", "value": $("#authName").val()});
+                data.push({"name": "deviceJson", "value": JSON.stringify(table2)});
+                data.push({"name": "expTime", "value": $("#day").val()*24*60 + $("#hour").val()*60 + parseInt($("#minute").val())});
+                $.operate.save(prefix + "/add",  data);
+            }
+        }
+    </script>
+</body>
+</html>

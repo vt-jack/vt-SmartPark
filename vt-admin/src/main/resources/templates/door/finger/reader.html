@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('指纹采集')" />
+    <style type="text/css">
+        .finger {
+            width: 150px;
+            height: 150px;
+            padding-left: 5px;
+        }
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <div class="row">
+        <div class="col-sm-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    采集进度
+                </div>
+                <div id="label" class="panel-body" style="height: 250px; overflow:auto">
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-8">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    指纹图片
+                </div>
+                <div id="finger" class="panel-body" style="height: 250px">
+                </div>
+                <input id="base64" hidden>
+            </div>
+        </div>
+    </div>
+</div>
+    <th:block th:include="include :: footer" />
+    <script th:src="@{/js/socket.io.js}"></script>
+    <script th:inline="javascript">
+        var prefix = ctx + "door/finger";
+        var userId = [[${@permission.getPrincipalProperty('userId')}]];
+
+        var socket;
+        connect();
+        function connect() {
+            var opts = {
+                query: 'userId=' + userId + "&event=finger_reader"
+            };
+            var host = [[${@config.getSocketIOHost()}]];
+            var port = [[${@config.getSocketIOPort()}]];
+            socket = io.connect('http://' + host + ':' + port, opts);
+
+            socket.on('connect', function () {
+                $.ajax({
+                    type: "post",
+                    url: prefix + "/connect",
+                    data: null,
+                    success: function(r) {
+                    }
+                });
+            });
+
+            socket.on('finger_reader', function (event) {
+                var result = JSON.parse(event.content)
+                if (event.code == web_status.FAIL) {
+                    $("#label").append('<p style="color: red">' + result.value + '</p>');
+                } else {
+                    if (result.key == "0") {
+                        $("#label").append('<p>' + result.value + '</p>');
+                    } else if (result.key == "1") {
+                        $("#finger").append('<img class="finger" src="' + "data:image/jpg;base64," + result.value + '">');
+                    } else if (result.key == "2") {
+                        $("#base64").val(result.value);
+                    } else if (result.key == "-1") {
+                        $("#finger").empty();
+                        $("#label").append('<p>' + result.value + '</p>');
+                    }
+                }
+                $("#label").animate({scrollTop:$("#label")[0].scrollHeight},'1000');
+            });
+
+            socket.on('disconnect', function () {
+            });
+        }
+
+        function submitHandler() {
+            var base64 = $("#base64").val();
+            if (!$.common.isEmpty(base64)) {
+                parent.$("#" + parent.divName).append('<img id="hand' + parent.fgtNum + '" src="' + ctx + 'img/hand' + parent.fgtNum + '.png" base64="' + base64 + '" class="fgt fgt1">');
+            }
+            parent.initFinger();
+            $.modal.close();
+        }
+
+        function cancel() {
+            parent.initFinger();
+            $.modal.close();
+        }
+
+    </script>
+</body>
+</html>

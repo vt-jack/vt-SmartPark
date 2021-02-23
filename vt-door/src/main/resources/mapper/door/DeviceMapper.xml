@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.DeviceMapper">
+    
+    <resultMap type="Device" id="DeviceResult">
+        <result property="id"            column="id"    />
+        <result property="positionId"    column="position_id"    />
+        <result property="name"          column="name"    />
+        <result property="autoIp"        column="auto_ip"    />
+        <result property="mac"           column="mac"    />
+        <result property="ip"            column="ip"    />
+        <result property="ipMask"        column="ip_mask"    />
+        <result property="ipGateway"     column="ip_gateway"    />
+        <result property="tcpPort"       column="tcp_port"    />
+        <result property="udpPort"       column="udp_port"    />
+        <result property="serverIp"      column="server_ip"    />
+        <result property="serverAddress" column="server_address"    />
+        <result property="serverPort"    column="server_port"    />
+        <result property="dns"           column="dns"    />
+        <result property="dnsBak"        column="dns_bak"    />
+        <result property="controlPort"   column="control_port"    />
+        <result property="sn"            column="sn"    />
+        <result property="pwd"           column="pwd"    />
+        <result property="model"         column="model"    />
+        <result property="modelType"     column="model_type"    />
+        <result property="deviceType"    column="device_type"    />
+        <result property="cardType"      column="card_type"    />
+        <result property="recordMode"    column="record_mode"    />
+        <result property="keepTime"      column="keep_time"    />
+        <result property="ver"           column="ver"    />
+        <result property="verFace"       column="ver_face"    />
+        <result property="verFinger"     column="ver_finger"    />
+        <result property="algoritVer"    column="algorit_ver"    />
+        <result property="deadLine"      column="dead_line"    />
+        <result property="useButton"     column="use_button"    />
+        <result property="normallyOpen"  column="normally_open"    />
+        <result property="userCapacity"  column="user_capacity"    />
+        <result property="userUsed"      column="user_used"    />
+        <result property="cardCapacity"  column="card_capacity"    />
+        <result property="cardUsed"      column="card_used"    />
+        <result property="faceCapacity"  column="face_capacity"    />
+        <result property="faceUsed"      column="face_used"    />
+        <result property="fpCapacity"    column="fp_capacity"    />
+        <result property="fpUsed"        column="fp_used"    />
+        <result property="clockCapacity" column="clock_capacity"    />
+        <result property="clockUsed"     column="clock_used"    />
+        <result property="buttonCapacity" column="button_capacity"    />
+        <result property="buttonUsed"    column="button_used"    />
+        <result property="doorCapacity"  column="door_capacity"    />
+        <result property="doorUsed"      column="door_used"    />
+        <result property="softwareCapacity" column="software_capacity"    />
+        <result property="softwareUsed"  column="software_used"    />
+        <result property="alarmCapacity" column="alarm_capacity"    />
+        <result property="alarmUsed"     column="alarm_used"    />
+        <result property="sysCapacity"   column="sys_capacity"    />
+        <result property="sysUsed"       column="sys_used"    />
+        <result property="bodyCapacity"  column="body_capacity"    />
+        <result property="bodyUsed"      column="body_used"    />
+        <result property="workState"     column="work_state"    />
+        <result property="delFlag"       column="del_flag"    />
+        <result property="createBy"      column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"      column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="positionName"  column="position_name"    />
+        <result property="image"         column="image"    />
+        <result property="conScheme"     column="con_scheme"    />
+        <result property="comment"       column="comment"    />
+        <result property="runDay"        column="run_day"    />
+        <result property="formatCount"   column="format_count"    />
+        <result property="restartCount"  column="restart_count"    />
+        <result property="temperature"   column="temperature"    />
+        <result property="startTime"     column="start_time"    />
+        <result property="voltage"       column="voltage"    />
+        <result property="ups"           column="ups"    />
+        <result property="antiBack"      column="anti_back"    />
+        <result property="delivery"      column="delivery"    />
+        <result property="manufacturer"  column="manufacturer"    />
+    </resultMap>
+
+    <sql id="selectDeviceVo">
+        select a.id, a.position_id, a.name, a.auto_ip, a.mac, a.ip, a.ip_mask, a.ip_gateway, a.tcp_port, a.udp_port,
+               a.server_ip, a.server_address, a.server_port, a.dns, a.dns_bak, a.control_port, a.sn, a.pwd, a.model,
+               a.ver, a.algorit_ver, a.dead_line, a.keep_time, a.record_mode, a.card_type, a.card_capacity, a.card_used, a.face_capacity,
+               a.face_used, a.fp_capacity, a.fp_used, a.clock_capacity, a.clock_used, a.sys_capacity, a.sys_used,
+               a.work_state, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time, b.name as position_name,
+               c.type as model_type, c.device_type, c.image, c.con_scheme, c.comment, a.use_button, a.normally_open, a.run_day,
+               a.format_count, a.restart_count, a.temperature, a.start_time, a.voltage, a.ups, a.anti_back, a.ver_face, a.ver_finger,
+               a.button_capacity, a.button_used, a.door_capacity, a.door_used, a.software_capacity, a.software_used, a.alarm_capacity,
+               a.alarm_used, a.body_capacity, a.body_used, a.user_capacity, a.user_used, a.delivery, a.manufacturer
+          from snk_device a
+          left join snk_device_position b on b.id = a.position_id and b.del_flag = '0'
+          left join snk_device_model c on c.model = a.model and c.del_flag = '0'
+    </sql>
+
+    <select id="selectDeviceList" parameterType="Device" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+            <if test="sn != null and sn != ''"> and a.sn = #{sn}</if>
+            <if test="deviceType != null and deviceType != ''"> and c.device_type = #{deviceType}</if>
+            <if test="positionId != null and positionId != 0">
+                AND (a.position_id = #{positionId} OR a.position_id IN ( SELECT t.id FROM snk_device_position t WHERE FIND_IN_SET (#{positionId},ancestors) ))
+            </if>
+            <if test="searchValue != null and searchValue != ''"> and a.name like concat('%', #{searchValue}, '%')</if>
+            <if test="ids != null"> and a.id in
+                <foreach item="id" collection="ids" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+            <!-- 数据范围过滤 -->
+            ${params.dataScopeSnk}
+            <if test="groupBy != null and groupBy != ''">
+                group by ${groupBy}
+            </if>
+            order by a.create_time desc, a.control_port
+        </where>
+    </select>
+    
+    <insert id="insertDevice" parameterType="Device" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="positionId != null">position_id,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="autoIp != null and autoIp != ''">auto_ip,</if>
+            <if test="mac != null and mac != ''">mac,</if>
+            <if test="ip != null and ip != ''">ip,</if>
+            <if test="ipMask != null and ipMask != ''">ip_mask,</if>
+            <if test="ipGateway != null and ipGateway != ''">ip_gateway,</if>
+            <if test="tcpPort != null">tcp_port,</if>
+            <if test="udpPort != null">udp_port,</if>
+            <if test="serverIp != null and serverIp != ''">server_ip,</if>
+            <if test="serverAddress != null and serverAddress != ''">server_address,</if>
+            <if test="serverPort != null">server_port,</if>
+            <if test="dns != null and dns != ''">dns,</if>
+            <if test="dnsBak != null and dnsBak != ''">dns_bak,</if>
+            <if test="controlPort != null and controlPort != ''">control_port,</if>
+            <if test="sn != null and sn != ''">sn,</if>
+            <if test="pwd != null and pwd != ''">pwd,</if>
+            <if test="model != null and model != ''">model,</if>
+            <if test="keepTime != null and keepTime != ''">keep_time,</if>
+            <if test="recordMode != null and recordMode != ''">record_mode,</if>
+            <if test="cardType != null and cardType != ''">card_type,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="positionId != null">#{positionId},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="autoIp != null and autoIp != ''">#{autoIp},</if>
+            <if test="mac != null and mac != ''">#{mac},</if>
+            <if test="ip != null and ip != ''">#{ip},</if>
+            <if test="ipMask != null and ipMask != ''">#{},</if>
+            <if test="ipGateway != null and ipGateway != ''">#{ipGateway},</if>
+            <if test="tcpPort != null">#{tcpPort},</if>
+            <if test="udpPort != null">#{udpPort},</if>
+            <if test="serverIp != null and serverIp != ''">#{serverIp},</if>
+            <if test="serverAddress != null and serverAddress != ''">#{serverAddress},</if>
+            <if test="serverPort != null">#{serverPort},</if>
+            <if test="dns != null and dns != ''">#{dns},</if>
+            <if test="dnsBak != null and dnsBak != ''">#{dnsBak},</if>
+            <if test="controlPort != null and controlPort != ''">#{controlPort},</if>
+            <if test="sn != null and sn != ''">#{sn},</if>
+            <if test="model != null and model != ''">#{model},</if>
+            <if test="keepTime != null and keepTime != ''">#{keepTime},</if>
+            <if test="recordMode != null and recordMode != ''">#{recordMode},</if>
+            <if test="cardType != null and cardType != ''">#{cardType},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <insert id="insertDeviceBatch" parameterType="Device" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_device(position_id, name, ip, tcp_port, control_port, sn, model, create_by, create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.positionId}, #{item.name}, #{item.ip}, #{item.tcpPort}, #{item.controlPort}, #{item.sn}, #{item.model}, #{item.createBy}, sysdate())
+        </foreach>
+    </insert>
+
+    <update id="updateDevice" parameterType="Device">
+        update snk_device
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="pwd != null and pwd != ''">pwd = #{pwd},</if>
+            <if test="newSn != null and newSn != ''">sn = #{newSn},</if>
+            <if test="positionId != null">position_id = #{positionId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="autoIp != null">auto_ip = #{autoIp},</if>
+            <if test="mac != null and mac != ''">mac = #{mac},</if>
+            <if test="ip != null and ip != ''">ip = #{ip},</if>
+            <if test="ipMask != null and ipMask != ''">ip_mask = #{ipMask},</if>
+            <if test="ipGateway != null and ipGateway != ''">ip_gateway = #{ipGateway},</if>
+            <if test="tcpPort != null">tcp_port = #{tcpPort},</if>
+            <if test="udpPort != null">udp_port = #{udpPort},</if>
+            <if test="serverIp != null and serverIp != ''">server_ip = #{serverIp},</if>
+            <if test="serverAddress != null and serverAddress != ''">server_address = #{serverAddress},</if>
+            <if test="serverPort != null">server_port = #{serverPort},</if>
+            <if test="dns != null and dns != ''">dns = #{dns},</if>
+            <if test="dnsBak != null and dnsBak != ''">dns_bak = #{dnsBak},</if>
+            <if test="controlPort != null">control_port = #{controlPort},</if>
+            <if test="sn != null and sn != ''">sn = #{sn},</if>
+            <if test="model != null and model != ''">model = #{model},</if>
+            <if test="keepTime != null">keep_time = #{keepTime},</if>
+            <if test="recordMode != null">record_mode = #{recordMode},</if>
+            <if test="cardType != null">card_type = #{cardType},</if>
+            <if test="ver != null and ver != ''">ver = #{ver},</if>
+            <if test="verFace != null and verFace != ''">ver_face = #{verFace},</if>
+            <if test="verFinger != null and verFinger != ''">ver_finger = #{verFinger},</if>
+            <if test="algoritVer != null and algoritVer != ''">algorit_ver = #{algoritVer},</if>
+            <if test="useButton != null">use_button = #{useButton},</if>
+            <if test="normallyOpen != null">normally_open = #{normallyOpen},</if>
+            <if test="deadLine != null">dead_line = #{deadLine},</if>
+            <if test="runDay != null">run_day = #{runDay},</if>
+            <if test="formatCount != null">format_count = #{formatCount},</if>
+            <if test="restartCount != null">restart_count = #{restartCount},</if>
+            <if test="temperature != null">temperature = #{temperature},</if>
+            <if test="startTime != null and startTime != ''">start_time = #{startTime},</if>
+            <if test="voltage != null">voltage = #{voltage},</if>
+            <if test="ups != null">ups = #{ups},</if>
+            <if test="antiBack != null">anti_back = #{antiBack},</if>
+            <if test="delivery != null and delivery != ''">delivery = #{delivery},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="cardCapacity != null">card_capacity = #{cardCapacity},</if>
+            <if test="cardUsed != null">card_used = #{cardUsed},</if>
+            <if test="userCapacity != null">user_capacity = #{userCapacity},</if>
+            <if test="userUsed != null">user_used = #{userUsed},</if>
+            <if test="faceCapacity != null">face_capacity = #{faceCapacity},</if>
+            <if test="faceUsed != null">face_used = #{faceUsed},</if>
+            <if test="fpCapacity != null">fp_capacity = #{fpCapacity},</if>
+            <if test="fpUsed != null">fp_used = #{fpUsed},</if>
+            <if test="clockCapacity != null">clock_capacity = #{clockCapacity},</if>
+            <if test="clockUsed != null">clock_used = #{clockUsed},</if>
+            <if test="buttonCapacity != null">button_capacity = #{buttonCapacity},</if>
+            <if test="buttonUsed != null">button_used = #{buttonUsed},</if>
+            <if test="doorCapacity != null">door_capacity = #{doorCapacity},</if>
+            <if test="doorUsed != null">door_used = #{doorUsed},</if>
+            <if test="softwareCapacity != null">software_capacity = #{softwareCapacity},</if>
+            <if test="softwareUsed != null">software_used = #{softwareUsed},</if>
+            <if test="alarmCapacity != null">alarm_capacity = #{alarmCapacity},</if>
+            <if test="alarmUsed != null">alarm_used = #{alarmUsed},</if>
+            <if test="sysCapacity != null">sys_capacity = #{sysCapacity},</if>
+            <if test="sysUsed != null">sys_used = #{sysUsed},</if>
+            <if test="bodyCapacity != null">body_capacity = #{bodyCapacity},</if>
+            <if test="bodyUsed != null">body_used = #{bodyUsed},</if>
+            <if test="workState != null and workState != ''">work_state = #{workState},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateDeviceBySn">
+        update snk_device
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="pwd != null and pwd != ''">pwd = #{pwd},</if>
+            <if test="newSn != null and newSn != ''">sn = #{newSn},</if>
+            <if test="positionId != null">position_id = #{positionId},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="autoIp != null">auto_ip = #{autoIp},</if>
+            <if test="mac != null and mac != ''">mac = #{mac},</if>
+            <if test="ip != null and ip != ''">ip = #{ip},</if>
+            <if test="ipMask != null and ipMask != ''">ip_mask = #{ipMask},</if>
+            <if test="ipGateway != null and ipGateway != ''">ip_gateway = #{ipGateway},</if>
+            <if test="tcpPort != null">tcp_port = #{tcpPort},</if>
+            <if test="udpPort != null">udp_port = #{udpPort},</if>
+            <if test="serverIp != null and serverIp != ''">server_ip = #{serverIp},</if>
+            <if test="serverAddress != null and serverAddress != ''">server_address = #{serverAddress},</if>
+            <if test="serverPort != null">server_port = #{serverPort},</if>
+            <if test="dns != null and dns != ''">dns = #{dns},</if>
+            <if test="dnsBak != null and dnsBak != ''">dns_bak = #{dnsBak},</if>
+            <if test="controlPort != null">control_port = #{controlPort},</if>
+            <if test="model != null and model != ''">model = #{model},</if>
+            <if test="keepTime != null">keep_time = #{keepTime},</if>
+            <if test="recordMode != null">record_mode = #{recordMode},</if>
+            <if test="cardType != null">card_type = #{cardType},</if>
+            <if test="ver != null and ver != ''">ver = #{ver},</if>
+            <if test="verFace != null and verFace != ''">ver_face = #{verFace},</if>
+            <if test="verFinger != null and verFinger != ''">ver_finger = #{verFinger},</if>
+            <if test="algoritVer != null and algoritVer != ''">algorit_ver = #{algoritVer},</if>
+            <if test="useButton != null">use_button = #{useButton},</if>
+            <if test="normallyOpen != null">normally_open = #{normallyOpen},</if>
+            <if test="deadLine != null">dead_line = #{deadLine},</if>
+            <if test="runDay != null">run_day = #{runDay},</if>
+            <if test="formatCount != null">format_count = #{formatCount},</if>
+            <if test="restartCount != null">restart_count = #{restartCount},</if>
+            <if test="temperature != null">temperature = #{temperature},</if>
+            <if test="startTime != null and startTime != ''">start_time = #{startTime},</if>
+            <if test="voltage != null">voltage = #{voltage},</if>
+            <if test="ups != null">ups = #{ups},</if>
+            <if test="antiBack != null">anti_back = #{antiBack},</if>
+            <if test="delivery != null and delivery != ''">delivery = #{delivery},</if>
+            <if test="manufacturer != null and manufacturer != ''">manufacturer = #{manufacturer},</if>
+            <if test="userCapacity != null">user_capacity = #{userCapacity},</if>
+            <if test="userUsed != null">user_used = #{userUsed},</if>
+            <if test="cardCapacity != null">card_capacity = #{cardCapacity},</if>
+            <if test="cardUsed != null">card_used = #{cardUsed},</if>
+            <if test="faceCapacity != null">face_capacity = #{faceCapacity},</if>
+            <if test="faceUsed != null">face_used = #{faceUsed},</if>
+            <if test="fpCapacity != null">fp_capacity = #{fpCapacity},</if>
+            <if test="fpUsed != null">fp_used = #{fpUsed},</if>
+            <if test="clockCapacity != null">clock_capacity = #{clockCapacity},</if>
+            <if test="clockUsed != null">clock_used = #{clockUsed},</if>
+            <if test="buttonCapacity != null">button_capacity = #{buttonCapacity},</if>
+            <if test="buttonUsed != null">button_used = #{buttonUsed},</if>
+            <if test="doorCapacity != null">door_capacity = #{doorCapacity},</if>
+            <if test="doorUsed != null">door_used = #{doorUsed},</if>
+            <if test="softwareCapacity != null">software_capacity = #{softwareCapacity},</if>
+            <if test="softwareUsed != null">software_used = #{softwareUsed},</if>
+            <if test="alarmCapacity != null">alarm_capacity = #{alarmCapacity},</if>
+            <if test="alarmUsed != null">alarm_used = #{alarmUsed},</if>
+            <if test="sysCapacity != null">sys_capacity = #{sysCapacity},</if>
+            <if test="sysUsed != null">sys_used = #{sysUsed},</if>
+            <if test="bodyCapacity != null">body_capacity = #{bodyCapacity},</if>
+            <if test="bodyUsed != null">body_used = #{bodyUsed},</if>
+            <if test="workState != null and workState != ''">work_state = #{workState},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+         where del_flag = '0'
+           and sn = #{sn}
+    </update>
+
+    <select id="selectDeviceById" parameterType="Long" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/> where a.id = #{id}
+    </select>
+
+    <select id="selectDeviceBySn" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/> where a.del_flag = '0' and a.sn = #{sn}
+    </select>
+
+    <select id="selectDeviceByControlPort" resultMap="DeviceResult">
+        <include refid="selectDeviceVo"/> where a.del_flag = '0' and a.sn = #{sn} and a.control_port = #{controlPort} limit 1
+    </select>
+
+    <delete id="deleteDeviceById" parameterType="Long">
+        update snk_device set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteDeviceByIds" parameterType="String">
+        update snk_device set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

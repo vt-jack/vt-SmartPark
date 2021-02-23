@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('新增节假日')" />
+    <th:block th:include="include :: datetimepicker-css" />
+    <style type="text/css">
+        .time {
+            border: 1px solid #009688;
+            border-radius: 4px;
+            padding: 2px 5px 2px 5px;
+        }
+
+        label > * {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-holiday-add">
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label is-required">年度：</label>
+                            <div class="col-sm-3">
+                                <select id="year" name="year" class="form-control m-b" required>
+                                </select>
+                            </div>
+                            <label class="col-sm-3 control-label is-required">节假日：</label>
+                            <div class="col-sm-3">
+                                <select id="type" name="type" class="form-control m-b" th:with="type=${@dict.getType('snk_holiday_type')}" required>
+                                    <option value="">请选择</option>
+                                    <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                </select>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label is-required">放假时间：</label>
+                            <div class="col-sm-7">
+                                <div class="input-group date">
+                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                    <input id="holiday" type="text" class="form-control" placeholder="yyyy-MM-dd - yyyy-MM-dd" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3"></label>
+                            <div class="col-sm-9">
+                                <div id="holidayDiv" style="height: 90px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">调班时间：</label>
+                            <div class="col-sm-4">
+                                <div class="input-group date">
+                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                    <input type="text" class="form-control" id="tbDate" placeholder="yyyy-MM-dd">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3"></label>
+                            <div class="col-sm-9">
+                                <div id="tbDiv" style="height: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">禁止开门：</label>
+                            <div class="col-sm-6">
+                                <label class="control-label toggle-switch switch-solid">
+                                    <input id="banDoor" type="checkbox">
+                                    <span></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">备注：</label>
+                            <div class="col-sm-9">
+                                <textarea class="form-control" name="remark"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: datetimepicker-js" />
+<script th:inline="javascript">
+    var prefix = ctx + "door/cwa/holiday";
+
+    $(function () {
+        var date = new Date();
+        for (var i = 2020; i <= 2089; i++) {
+            $("#year").append("<option value=" + i + ">" + i + "</option>");
+        }
+        $("#year").val(date.getFullYear());
+    });
+
+    layui.use('laydate', function() {
+        var laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#holiday',
+            range: true,
+            done: function(value, date){ //监听日期被切换
+                var dates = [];
+                dates = value.split(" - ");
+                var startDate = new Date(dates[0]);
+                var endDate = new Date(dates[1]);
+                $("#holidayDiv").empty();
+                while (endDate >= startDate) {
+                    var month = (startDate.getMonth()+1) < 10 ? "0" + (startDate.getMonth()+1) : (startDate.getMonth()+1);
+                    var date = startDate.getDate() < 10 ? "0" + startDate.getDate() : startDate.getDate();
+                    $("#holidayDiv").append('<label class="time">' + startDate.getFullYear() + "-" + month + "-" + date + '</label>&nbsp;');
+                    startDate = startDate.setDate(startDate.getDate() + 1);
+                    startDate = new Date(startDate);
+                }
+            }
+        });
+
+        laydate.render({
+            elem: '#tbDate',
+            type: 'date',
+            done: function(value, date){ //监听日期被切换
+                var labels = $("#tbDiv label");
+                var isExists = false;
+                $.each(labels, function (index, obj) {
+                    if (obj.innerText == value) {
+                        isExists = true;
+                        return false;
+                    }
+                })
+                if (!isExists) {
+                    $("#tbDiv").append('<label id="' + value + '" class="time" onclick="removeTime(\'' + value + '\')">' + value + '</label>&nbsp;');
+                }
+            }
+        });
+    });
+
+    function removeTime(id) {
+        $("#" + id).remove();
+    }
+
+    function submitHandler() {
+        if ($.validate.form()) {
+            var data = $("#form-holiday-add").serializeArray();
+            var holidays = $("#holidayDiv label");
+            var tbDates = $("#tbDiv label");
+            var holiday = [], tbDate = [];
+            $.each(holidays, function (index, obj) {
+                holiday.push(obj.innerText);
+            })
+            $.each(tbDates, function (index, obj) {
+                tbDate.push(obj.innerText);
+            })
+            var banDoor = $("input[id='banDoor']").is(':checked') == true ? 1 : 0;
+            data.push({"name": "holiday", "value": holiday.join()});
+            data.push({"name": "tbDate", "value": tbDate.join()});
+            data.push({"name": "banDoor", "value": banDoor});
+            $.operate.save(prefix + "/add", data);
+        }
+    }
+
+</script>
+</body>
+</html>

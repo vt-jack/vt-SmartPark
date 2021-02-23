@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('考勤设备列表')" />
+</head>
+<body class="gray-bg">
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>可选考勤设备</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 search-collapse">
+                                    <form id="formId1">
+                                        <div class="select-list">
+                                            <ul>
+                                                <li>
+                                                    <label>设备名称：</label>
+                                                    <input type="text" name="name"/>
+                                                </li>
+                                                <li>
+                                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId1', 'bootstrap-table1');"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table1"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-1" style="text-align: center; padding-top: 100px">
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="addAll()" title="添加全部" shiro:hasPermission="door:cwaDevice:add"> >> </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="add()" title="添加" shiro:hasPermission="door:cwaDevice:add"> &nbsp;>&nbsp; </a>
+                </div><br><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="del()" title="删除" shiro:hasPermission="door:cwaDevice:remove"> &nbsp;<&nbsp; </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="delAll()" title="删除全部" shiro:hasPermission="door:cwaDevice:remove"> << </a>
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>已选考勤设备</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 search-collapse">
+                                    <form id="formId2">
+                                        <div class="select-list">
+                                            <ul>
+                                                <li>
+                                                    <label>设备名称：</label>
+                                                    <input type="text" name="deviceName"/>
+                                                </li>
+                                                <li>
+                                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId2', 'bootstrap-table2')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table2"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<th:block th:include="include :: footer" />
+<script th:inline="javascript">
+    var prefix = ctx + "door/cwa/device";
+
+    $(function() {
+        var options = {
+            uniqueId: "id",
+            id: "bootstrap-table1",
+            url: prefix + "/deviceList",
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            modalName: "设备列表",
+            columns: [{
+                field: 'state',
+                checkbox: true
+            },
+            {
+                field: 'sn',
+                title: 'SN'
+            },
+            {
+                field: 'controlPort',
+                title: '控制端口',
+                formatter: function(value, row, index) {
+                    return "第" + value + "端口"
+                }
+            },
+            {
+                field: 'name',
+                title: '设备名称'
+            },
+            {
+                field: 'positionName',
+                title: '安装位置'
+            }]
+        };
+        $.table.init(options);
+    });
+
+    $(function() {
+        var options = {
+            uniqueId: "id",
+            id: "bootstrap-table2",
+            toolbar: "toolbar2",
+            url: prefix + "/list",
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            modalName: "考勤设备",
+            columns: [{
+                field: 'state',
+                checkbox: true
+            },
+            {
+                field: 'deviceId',
+                title: '设备ID',
+                visible: false
+            },
+            {
+                field: 'deviceName',
+                title: '设备名称'
+            },
+            {
+                field: 'positionName',
+                title: '安装位置'
+            },
+            {
+                field: 'createBy',
+                title: '创建人'
+            },
+            {
+                field: 'createTime',
+                title: '创建时间'
+            }],
+            onLoadSuccess: function(data) {
+
+            }
+        };
+        $.table.init(options);
+    });
+
+    function add() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getSelections");
+        if (table1.length == 0) {
+            $.modal.alertWarning("请至少选择一个设备");
+            return;
+        }
+        addCwaDevice(table1);
+    }
+
+    function del() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getSelections");
+        if (table2.length == 0) {
+            $.modal.alertWarning("请至少选择一个设备");
+            return;
+        }
+        delCwaDevice(table2);
+    }
+
+    function addAll() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getData");
+        if (table1.length == 0) {
+            $.modal.alertWarning("没有可以添加的设备");
+            return;
+        }
+        addCwaDevice(table1);
+    }
+
+    function delAll() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        if (table2.length == 0) {
+            $.modal.alertWarning("没有可以删除的设备");
+            return;
+        }
+        delCwaDevice(table2);
+    }
+
+    function addCwaDevice(table1) {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        var deviceList = [];
+        $.each(table1, function (i, tab1) {
+            var isExists = false;
+            $.each(table2, function (j, tab2) {
+                if (tab1.id == tab2.deviceId) {
+                    isExists = true;
+                    return false;
+                }
+            });
+            if (!isExists) {
+                var device = {"deviceId": tab1.id};
+                deviceList.push(device);
+            }
+        });
+        if (deviceList.length > 0) {
+            $.ajax({
+                url : prefix + "/add",
+                type : "POST",
+                contentType: "application/json",
+                data : JSON.stringify(deviceList),
+                async : false,
+                success : function(data) {
+                    $("#bootstrap-table1").bootstrapTable('refresh');
+                    $("#bootstrap-table2").bootstrapTable('refresh');
+                }
+            });
+        }
+    }
+
+    function delCwaDevice(table2) {
+        var ids = [];
+        $.each(table2, function(i, obj) {
+            ids.push(obj.id);
+        });
+        $.ajax({
+            url : prefix + "/remove",
+            type : "POST",
+            dataType: "json",
+            data : {"ids": ids.join()},
+            async : false,
+            success : function(data) {
+                $("#bootstrap-table1").bootstrapTable('refresh');
+                $("#bootstrap-table2").bootstrapTable('refresh');
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

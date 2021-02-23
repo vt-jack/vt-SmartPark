@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('来访登记')" />
+</head>
+<body class="white-bg">
+    <div class="ui-layout-center">
+        <div class="container-div">
+            <div class="row">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId">
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>姓名：</label>
+                                    <input type="text" name="name"/>
+                                </li>
+                                <li>
+                                    <label>证件号：</label>
+                                    <input type="text" name="idNo"/>
+                                </li>
+                                <li>
+                                    <label>卡号：</label>
+                                    <input type="text" name="proofValue"/>
+                                </li>
+                                <li>
+                                    来访事由：<select name="visitReason" th:with="type=${@dict.getType('snk_visit_reason')}">
+                                                <option value="">所有</option>
+                                                <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                            </select>
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="btn-group-sm" id="toolbar" role="group">
+                    <a class="btn btn-primary" onclick="add()" shiro:hasPermission="door:visitReg:add">
+                        <i class="fa fa-plus"></i> 登记
+                    </a>
+                    <a class="btn btn-default btn-sm" onclick="cancelCard()" shiro:hasPermission="door:visitReg:cancel">
+                        <i class="fa fa-trash-o"></i> 销卡
+                    </a>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: bootstrap-suggest-js" />
+    <script th:inline="javascript">
+        var cancelFlag = [[${@permission.hasPermi('door:visitReg:cancel')}]];
+        var idType = [[${@dict.getType('snk_id_type')}]];
+        var visitReason = [[${@dict.getType('snk_visit_reason')}]];
+        var prefix = ctx + "door/visit/reg";
+
+        $(function() {
+            var options = {
+                uniqueId: "id",
+                url: prefix + "/list",
+                showColumns: false,
+                showToggle: false,
+                modalName: "来访人员",
+                columns: [{
+                    field: 'photo',
+                    title: '人像',
+                    formatter: function(value, row, index) {
+                        if ($.common.isEmpty(value)) {
+                            return value;
+                        }
+                        return $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s'/>", 'auto', 'auto', 'self', ctx + value.substr(1));
+                    }
+                },
+                {
+                    field: 'name',
+                    title: '姓名'
+                },
+                {
+                    field: 'phone',
+                    title: '手机号'
+                },
+                {
+                    field: 'idType',
+                    title: '证件类型',
+                    formatter: function(value, row, index) {
+                        return $.table.selectDictLabel(idType, value);
+                    }
+                },
+                {
+                    field: 'idNo',
+                    title: '证件号'
+                },
+                {
+                    field: 'visitReason',
+                    title: '来访事由',
+                    formatter: function(value, row, index) {
+                        return $.table.selectDictLabel(visitReason, value);
+                    }
+                },
+                {
+                    field: 'companyName',
+                    title: '被访问企业'
+                },
+                {
+                    field: 'companyUser',
+                    title: '被访问者'
+                },
+                {
+                    field: 'visitTime',
+                    title: '访问时间'
+                },
+                {
+                    field: 'proofType',
+                    title: '登记类型',
+                    formatter: function(value, row, index) {
+                        if ("1" == value) {
+                            return "卡号";
+                        }
+                        return "二维码";
+                    }
+                },
+                {
+                    field: 'proofValue',
+                    title: '凭证'
+                },
+                {
+                    field: 'createBy',
+                    title: '登记人'
+                },
+                {
+                    field: 'createTime',
+                    title: '登记时间'
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        if (row.cancel == "0") {
+                            actions.push('<a class="btn btn-default btn-xs ' + cancelFlag + '" href="javascript:void(0)" onclick="cancel(\'' + row.id + '\')"><i class="fa fa-trash-o"></i> 注销</a> ');
+                        }
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+        });
+
+        function add() {
+            $.modal.openFull("来访登记", prefix + "/add");
+        }
+
+        function cancel(id) {
+            $.modal.confirm("请确认您的操作", function() {    // 删除
+                $.ajax({
+                    type: "post",
+                    url: prefix + "/cancel/" + id,
+                    data: null,
+                    success: function(result) {
+                        $.modal.msgSuccess("注销成功");
+                        $("#bootstrap-table").bootstrapTable('refresh');
+                    }
+                });
+            });
+        }
+
+        function cancelCard() {
+            layer.prompt({title: '请输入卡号或证件号，并确认', formType: 3}, function(value, index){
+                $.ajax({
+                    type: "get",
+                    url: prefix + "/listBySearchValue",
+                    data: {searchValue: value},
+                    success: function(result) {
+                        if (result.length == 0) {
+                            $.modal.alertError("此卡号或证件号未登记，无需注销");
+                            return;
+                        } else if (result.length > 1) {
+                            $.modal.alertError("此卡号或证件号有多条登记信息，请在列表搜索注销");
+                            return;
+                        } else {
+                            cancel(result[0].id);
+                            layer.close(index);
+                        }
+                    }
+                });
+            });
+        }
+        
+    </script>
+</body>
+</html>

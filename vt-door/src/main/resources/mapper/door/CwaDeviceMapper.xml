@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaDeviceMapper">
+    
+    <resultMap type="CwaDevice" id="CwaDeviceResult">
+        <result property="id"    column="id"    />
+        <result property="deviceId"    column="device_id"    />
+        <result property="deviceName"    column="device_name"    />
+        <result property="positionName"    column="position_name"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaDeviceVo">
+        select a.id, a.device_id, b.name as device_name, c.name as position_name, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_device a
+          left join snk_device b on b.id = a.device_id
+          left join snk_device_position c on c.id = b.position_id
+    </sql>
+
+    <select id="selectCwaDeviceList" parameterType="CwaDevice" resultMap="CwaDeviceResult">
+        <include refid="selectCwaDeviceVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="deviceName != null and deviceName != ''"> and b.name like concat('%', #{deviceName}, '%')</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.create_time desc
+    </select>
+    
+    <insert id="insertCwaDevice" parameterType="CwaDevice" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_device
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">device_id,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="deviceId != null">#{deviceId},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <delete id="deleteCwaDeviceById" parameterType="Long">
+        update snk_cwa_device set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaDeviceByIds" parameterType="String">
+        update snk_cwa_device set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

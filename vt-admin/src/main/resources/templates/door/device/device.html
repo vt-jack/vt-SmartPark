@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('人员信息列表')" />
+    <th:block th:include="include :: layout-latest-css" />
+    <th:block th:include="include :: ztree-css" />
+</head>
+<body class="gray-bg">
+    <div class="ui-layout-west">
+        <div class="box box-main">
+            <div class="box-header">
+                <div class="box-title">
+                    <i class="fa icon-grid"></i> 设备位置
+                </div>
+                <div class="box-tools pull-right">
+                    <button type="button" class="btn btn-box-tool" id="btnExpand" title="展开" style="display:none;"><i class="fa fa-chevron-up"></i></button>
+                    <button type="button" class="btn btn-box-tool" id="btnCollapse" title="折叠"><i class="fa fa-chevron-down"></i></button>
+                    <button type="button" class="btn btn-box-tool" id="btnRefresh" title="刷新位置"><i class="fa fa-refresh"></i></button>
+                </div>
+            </div>
+            <div class="ui-layout-content">
+                <div id="tree" class="ztree"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ui-layout-center">
+        <div class="container-div">
+            <div class="row">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId">
+                        <input type="hidden" id="positionId" name="positionId">
+                        <input type="hidden" id="parentId" name="parentId">
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>设备名称：</label>
+                                    <input type="text" name="name"/>
+                                </li>
+                                <li>
+                                    <label>SN：</label>
+                                    <input type="text" name="sn"/>
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="btn-group-sm" id="toolbar" role="group">
+                    <a class="btn btn-success" onclick="add()" shiro:hasPermission="door:device:add">
+                        <i class="fa fa-plus"></i> 安装
+                    </a>
+                    <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="door:device:remove">
+                        <i class="fa fa-remove"></i> 删除
+                    </a>
+                    <a class="btn btn-primary multiple disabled" onclick="operate('OPEN_DOOR')" shiro:hasPermission="door:device:open">
+                        <i class="fa fa-unlock"></i> 远程开门
+                    </a>
+                    <a class="btn btn-warning multiple disabled" onclick="operate('CLOSE_DOOR')" shiro:hasPermission="door:device:close">
+                        <i class="fa fa-lock"></i> 远程关门
+                    </a>
+                    <a class="btn btn-default" onclick="showMore()" shiro:hasPermission="door:device:hold,door:device:lock,door:device:unlock">
+                        <i class="fa fa-plus-square"></i> 更多
+                    </a>
+                    <a id="hold" class="btn btn-white multiple disabled" onclick="operate('HOLD_DOOR')" shiro:hasPermission="door:device:hold" style="display: none">
+                        <i class="fa fa-circle-o-notch"></i> 常开
+                    </a>
+                    <a id="lock" class="btn btn-danger multiple disabled" onclick="operate('LOCK_DOOR')" shiro:hasPermission="door:device:lock" style="display: none">
+                        <i class="fa fa-minus-circle"></i> 锁定
+                    </a>
+                    <a id="unlock" class="btn btn-info multiple disabled" onclick="operate('UNLOCK_DOOR')" shiro:hasPermission="door:device:unlock" style="display: none">
+                        <i class="fa fa-circle-thin"></i> 解除锁定
+                    </a>
+                    <a id="watch" class="btn btn-default multiple disabled" onclick="watch()" shiro:hasPermission="door:device:watch" style="display: none">
+                        <i class="fa fa-desktop"></i> 数据监控
+                    </a>
+                    <a id="auth" class="btn btn-success disabled" onclick="grant()" shiro:hasPermission="door:device:grant" style="display: none">
+                        <i class="fa fa-user-plus"></i> 权限设置
+                    </a>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: layout-latest-js" />
+    <th:block th:include="include :: ztree-js" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('door:device:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('door:device:remove')}]];
+        var workState = [[${@dict.getType('snk_work_state')}]];
+        var prefix = ctx + "door/device";
+        var param;
+        var op = false;
+
+        $(function() {
+            var panehHidden = false;
+            if ($(this).width() < 769) {
+                panehHidden = true;
+            }
+            $('body').layout({ initClosed: panehHidden, west__size: 185 });
+            queryDeviceList();
+            queryPositionTree();
+        });
+
+        function queryDeviceList() {
+            var options = {
+                uniqueId: "id",
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                clickToSelect: true,
+                modalName: "门禁设备",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'sn',
+                    title: 'SN'
+                },
+                {
+                    field: 'name',
+                    title: '设备名称'
+                },
+                {
+                    field: 'positionName',
+                    title: '安装位置'
+                },
+                {
+                    field: 'model',
+                    title: '型号'
+                },
+                {
+                    field: 'controlPort',
+                    title: '控制端口',
+                    formatter: function(value, row, index) {
+                        return "第" + value + "端口"
+                    }
+                },
+                {
+                    field: 'workState',
+                    title: '在线状态',
+                    formatter: function(value, row, index) {
+                        value = $.table.selectDictLabel(workState, value);
+                        return "<span style='color: blue;'>" + value + "</span>"
+                    }
+                },
+                {
+                    field: 'createBy',
+                    title: '创建者'
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间'
+                },
+                {
+                    field: 'op',
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="edit(\'' + row.id + '\')"><i class="fa fa-edit"></i>属性</a> ');
+                        actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="remove(\'' + row.id + '\')"><i class="fa fa-remove"></i>删除</a>');
+                        return actions.join('');
+                    }
+                }]
+            };
+            $.table.init(options);
+            $('#bootstrap-table').on('check.bs.table', function () {
+                disabledBtn();
+            });
+            $('#bootstrap-table').on('uncheck.bs.table', function () {
+                disabledBtn();
+            });
+            $('#bootstrap-table').on('check-all.bs.table', function () {
+                disabledBtn();
+            });
+            $('#bootstrap-table').on('uncheck-all.bs.table', function () {
+                $("#auth").addClass("disabled", "disabled");
+            });
+        }
+
+        function disabledBtn() {
+            var rows = $("#bootstrap-table").bootstrapTable("getSelections");
+            var disabled = false;
+            var sn;
+            $.each(rows, function (index, obj) {
+                if (!$.common.isEmpty(sn) && obj.sn != sn) {
+                    disabled = true;
+                    return false;
+                }
+                sn = obj.sn;
+            });
+            if (rows.length == 0 || disabled) {
+                $("#auth").addClass("disabled", "disabled");
+            } else {
+                $("#auth").removeClass("disabled");
+            }
+        }
+
+        function queryPositionTree()
+        {
+            var url = ctx + "door/device/position/treeData";
+            var options = {
+                url: url,
+                expandLevel: 2,
+                onClick : zOnClick
+            };
+            $.tree.init(options);
+
+            function zOnClick(event, treeId, treeNode) {
+                $("#positionId").val(treeNode.id);
+                $("#parentId").val(treeNode.pId);
+                $.table.search();
+            }
+        }
+
+        $('#btnExpand').click(function() {
+            $._tree.expandAll(true);
+            $(this).hide();
+            $('#btnCollapse').show();
+        });
+
+        $('#btnCollapse').click(function() {
+            $._tree.expandAll(false);
+            $(this).hide();
+            $('#btnExpand').show();
+        });
+
+        $('#btnRefresh').click(function() {
+            queryPositionTree();
+        });
+
+        function add() {
+            $.modal.open("安装设备", prefix + "/add", 1000);
+        }
+
+        function edit(id) {
+            op = true;
+            $.operate.edit(id, true);
+        }
+
+        function remove(id) {
+            op = true;
+            $.operate.remove(id);
+        }
+
+        function grant() {
+            table.set();
+            var rows = $("#bootstrap-table").bootstrapTable("getSelections");
+            if (rows.length == 0) {
+                $.modal.alertWarning("请至少选择一条记录");
+                return;
+            }
+            $.modal.openFull("权限授权", prefix + "/grant?sn=" + rows[0].sn, null, null, true);
+        }
+
+        function watch() {
+            var rows = $.common.isEmpty(table.options.uniqueId) ? $.table.selectFirstColumns() : $.table.selectColumns(table.options.uniqueId);
+            if (rows.length == 0) {
+                $.modal.alertWarning("请至少选择一条记录");
+                return;
+            }
+            $.modal.openFull("数据监控", prefix + "/watch");
+        }
+
+        function operate(operation) {
+            table.set();
+            var rows = $("#bootstrap-table").bootstrapTable("getSelections");
+            if (rows.length == 0) {
+                $.modal.alertWarning("请至少选择一条记录");
+                return;
+            }
+            param = rows;
+            $.modal.open("操作记录", prefix + "/operate?operation=" + operation, null, null, null, true);
+        }
+
+        function showMore() {
+            // 常开
+            if ($("#hold").css("display") == "none") {
+                $("#hold").show();
+            } else {
+                $("#hold").hide();
+            }
+            // 锁定
+            if ($("#lock").css("display") == "none") {
+                $("#lock").show();
+            } else {
+                $("#lock").hide();
+            }
+            // 解除锁定
+            if ($("#unlock").css("display") == "none") {
+                $("#unlock").show();
+            } else {
+                $("#unlock").hide();
+            }
+
+            // 数据监控
+            if ($("#watch").css("display") == "none") {
+                $("#watch").show();
+            } else {
+                $("#watch").hide();
+            }
+
+            // 权限授权
+            if ($("#auth").css("display") == "none") {
+                $("#auth").show();
+            } else {
+                $("#auth").hide();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('安装设备')" />
+    <style>
+        .image {
+            width: 350px;
+            height: 400px;
+        }
+
+        .deviceImage {
+            width: 150px;
+            height: 150px;
+        }
+
+        .input-group-addon {
+            padding: 2px 2px 1px 2px; !important;
+            font-size: 12px; !important;
+        }
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-device-add">
+        <div id="step1">
+            <div class="row">
+                <div class="form-group">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-6">
+                        <div class="user-info-head action">
+                            <img class="image" th:src="@{/img/device-default.jpg}" ></label>
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+                        <a onclick="downloadSetTool()">设置工具</a>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-6">
+                        <label class="col-sm-6 control-label is-required">请输入SN码：</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4"></div>
+                    <div class="col-sm-6">
+                        <div class="col-sm-2"></div>
+                        <div class="col-sm-6">
+                            <div class="input-group m-b">
+                                <input id="sn" type="text" placeholder="Enter SN" class="form-control" maxlength="16" onkeyup="js()" required>
+                                <span id="span" class="input-group-addon">0/16</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input id="deviceType" type="text" hidden>
+            </div>
+        </div>
+        <div id="step2" style="display: none">
+            <div class="form-group">
+                <div class="col-sm-3">
+                    <div class="panel panel-default" style="width: 90%">
+                        <div class="panel-heading">
+                            设备信息
+                        </div>
+                        <div class="panel-body">
+                            <p>正在安装：</p>
+                            <p id="model" style="color: blue"></p>
+                            <p id="comment"></p>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                            <p>正在处理设备：</p>
+                            <img class="deviceImage" id="image">
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                            <p>该设备SN号码：</p>
+                            <p id="snNo"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-1">
+                </div>
+                <div class="col-sm-9">
+                    <div id="deviceList" class="row">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+    <th:block th:include="include :: footer" />
+    <script th:src="@{/js/socket.io.js}"></script>
+    <script th:inline="javascript">
+        var prefix = ctx + "door/device";
+        var saveFlag = false;
+        var loginName = [[${@permission.getPrincipalProperty('loginName')}]];
+
+        var socket;
+        var modelPort;
+        connect();
+        function connect() {
+            var opts = {
+                query: 'userId=' + [[${@permission.getPrincipalProperty('userId')}]]
+            };
+            var host = [[${@config.getSocketIOHost()}]];
+            var port = [[${@config.getSocketIOPort()}]];
+            socket = io.connect('http://' + host + ':' + port, opts);
+
+            socket.on('connect', function () {
+            });
+
+            socket.on('add_device', function (event) {
+                var result = JSON.parse(event.content);
+                if (result.code == web_status.SUCCESS) {
+                    $.modal.closeLoading();
+                    $("#step1").css("display", "none");
+                    var dataRsp = result.data;
+                    modelPort = dataRsp.modelPort;
+                    var html = "";
+                    for (var i = 1; i <= modelPort; i ++){
+                        html += '<div class="panel panel-default">';
+                        html += '<div class="panel-heading">';
+                        html += '第' + i + '端口';
+                        html += '</div>';
+                        html += '<div class="panel-body">';
+                        html += '<div class="form-group">';
+                        html += '<div class="col-sm-6">';
+                        html += '<label class="col-sm-5 control-label is-required">设备名称：</label>';
+                        html += '<div class="col-sm-7">';
+                        html += '<input id="deviceName' + i + '" name="deviceName' + i + '" type="text" value="' + dataRsp.sn + "-" + i + '" class="form-control" required>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '<div class="col-sm-6">';
+                        html += '<label class="col-sm-5 control-label is-required">安装位置：</label>';
+                        html += '<div class="col-sm-7">';
+                        html += '<div class="input-group">';
+                        html += '<input name="positionId' + i + '" type="hidden" id="treeId' + i + '"/>';
+                        html += '<input name="positionName' + i + '" onclick="selectPositionTree('+ i +')" id="treeName' + i + '" type="text" class="form-control" required>';
+                        html += '<span class="input-group-addon"><i class="fa fa-search"></i></span>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                        html += '</div>';
+                    }
+                    $("#deviceList").html(html);
+                    $("#snNo").text($("#sn").val());
+                    $("#model").text(dataRsp.model);
+                    $("#deviceType").val(dataRsp.deviceType);
+                    $("#comment").text(dataRsp.comment);
+                    $("#image").attr("src", $.common.isEmpty(dataRsp.image) ? ctx + "img/default.jpg" : dataRsp.image);
+                    $("#step2").css("display", "");
+                    saveFlag = true;
+                } else {
+                    $.modal.closeLoading();
+                    $.modal.alertError(result.msg);
+                }
+            });
+
+            socket.on('disconnect', function () {
+            });
+        }
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var sn = $("#sn").val();
+                if (saveFlag) {
+                    var deviceList = [];
+                    var model = $("#model").text();
+                    var deviceType = $("#deviceType").val();
+                    for(var i = 1; i <= modelPort; i++) {
+                        var device = {"positionId": $("#treeId" + i).val(),
+                            "name": $("#deviceName" + i).val(),
+                            "controlPort": i,
+                            "model": model,
+                            "deviceType": deviceType,
+                            "sn": sn,
+                            "createBy": loginName};
+                        deviceList.push(device);
+                    }
+                    $.ajax({
+                        url: prefix + "/addBatch",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(deviceList),
+                        success: function(result) {
+                            $.modal.close();
+                            parent.$.table.refresh();
+                            parent.$.modal.msgSuccess("安装成功");
+                        }
+                    });
+                } else {
+                    $.modal.loading("正在尝试连接设备...");
+                    var data = {
+                        "sn": sn,
+                    };
+                    $.ajax({
+                        url: prefix + "/connect",
+                        type: "POST",
+                        contentType: "application/json",
+                        data: JSON.stringify(data),
+                        success: function (result) {
+                        }
+                    });
+                }
+            }
+        }
+
+        var treeIdx;
+        /*用户管理-修改-选择部门树*/
+        function selectPositionTree(idx) {
+            treeIdx = idx;
+            var positionId = $.common.isEmpty($("#treeId" + treeIdx).val()) ? "1" : $("#treeId" + treeIdx).val();
+            var url = ctx + "door/device/position/selectPositionTree/" + positionId;
+            var options = {
+                title: '选择安装位置',
+                width: "380",
+                url: url,
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero){
+            var tree = layero.find("iframe")[0].contentWindow.$._tree;
+            if ($.tree.notAllowParents(tree)) {
+                var body = layer.getChildFrame('body', index);
+                $("#treeId" + treeIdx).val(body.find('#treeId').val());
+                $("#treeName" + treeIdx).val(body.find('#treeName').val());
+                layer.close(index);
+            }
+        }
+
+        function js() {
+            $("#span").text($("#sn").val().length + "/16")
+        }
+
+        function downloadSetTool() {
+            var fileName = "IPSetTool.zip";
+            window.location.href = ctx + "common/download?fileName=" + encodeURI(fileName) + "&delete=" + false;
+        }
+    </script>
+</body>
+</html>

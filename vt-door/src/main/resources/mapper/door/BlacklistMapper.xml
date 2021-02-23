@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.BlacklistMapper">
+    
+    <resultMap type="Blacklist" id="BlacklistResult">
+        <result property="id"    column="id"    />
+        <result property="refId"    column="ref_id"    />
+        <result property="liftTime"    column="lift_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="name"    column="name"    />
+        <result property="phone"    column="phone"    />
+        <result property="idNo"    column="id_no"    />
+    </resultMap>
+
+    <sql id="selectBlacklistVo">
+        select a.id, a.ref_id, a.lift_time, a.remark, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time,
+               b.name, b.phone, b.id_no
+          from snk_user_blacklist a
+          left join snk_user b on a.ref_id = b.id
+    </sql>
+
+    <select id="selectBlacklistList" parameterType="Blacklist" resultMap="BlacklistResult">
+        <include refid="selectBlacklistVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="refIds != null and refIds.length > 0"> and a.ref_id in
+                <foreach item="item" collection="refIds" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="name != null and name != ''"> and b.name = #{name}</if>
+            <if test="phone != null and phone != ''"> and b.phone = #{phone}</if>
+            <if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+                and date_format(a.create_time,'%y%m%d') &gt;= date_format(#{params.beginTime},'%y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+                and date_format(a.create_time,'%y%m%d') &lt;= date_format(#{params.endTime},'%y%m%d')
+            </if>
+            <!-- 数据范围过滤 -->
+            ${params.dataScopeSnk}
+        </where>
+    </select>
+
+    <select id="selectLiftList" resultMap="BlacklistResult">
+        <include refid="selectBlacklistVo"/>
+        where a.del_flag = '0'
+          and a.lift_time &lt;= now()
+    </select>
+    
+    <select id="selectBlacklistById" parameterType="Long" resultMap="BlacklistResult">
+        <include refid="selectBlacklistVo"/>
+        where a.id = #{id}
+    </select>
+
+    <select id="selectBlacklistByIds" parameterType="String" resultMap="BlacklistResult">
+        <include refid="selectBlacklistVo"/>
+        where a.id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+        
+    <insert id="insertBlacklist" parameterType="Blacklist" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_user_blacklist
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="refId != null">ref_id,</if>
+            <if test="liftTime != null">lift_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null and delFlag != ''">del_flag,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="refId != null">#{refId},</if>
+            <if test="liftTime != null">#{liftTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <insert id="insertBlacklistBatch" parameterType="Blacklist">
+        insert into snk_user_blacklist(ref_id, lift_time, remark, create_by, create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.refId}, #{item.liftTime}, #{item.remark}, #{item.createBy}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <update id="updateBlacklist" parameterType="Blacklist">
+        update snk_user_blacklist
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="refId != null">ref_id = #{refId},</if>
+            lift_time = #{liftTime},
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null and delFlag != ''">del_flag = #{delFlag},</if>
+            <if test="createBy != null and createBy != ''">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBlacklistById" parameterType="Long">
+        update snk_user_blacklist set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteBlacklistByUserIds" parameterType="String">
+        update snk_user_blacklist set del_flag = '1' where del_flag = '0'
+           and ref_id in
+        <foreach item="userId" collection="array" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteBlacklistByIds" parameterType="String">
+        update snk_user_blacklist set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

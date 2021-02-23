@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>vt</artifactId>
+        <groupId>com.vt</groupId>
+        <version>4.3.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>vt-door</artifactId>
+
+    <description>
+        门禁管理
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.DoorAccessIO</groupId>
+            <artifactId>DoorAccessIO</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${jar.static}/lib/DoorAccessIO.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.FaceAccessIO</groupId>
+            <artifactId>FaceAccessIO</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${jar.static}/lib/FaceAccessIO.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.ZKFingerReader</groupId>
+            <artifactId>ZKFingerReader</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${jar.static}/lib/ZKFingerReader.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.6.0</version>
+            <scope>system</scope>
+            <systemPath>${jar.static}/lib/jna-5.6.0.jar</systemPath>
+        </dependency>
+
+        <!-- 通用工具-->
+        <dependency>
+            <groupId>com.vt</groupId>
+            <artifactId>vt-common</artifactId>
+        </dependency>
+
+        <!-- 系统模块-->
+        <dependency>
+            <groupId>com.vt</groupId>
+            <artifactId>vt-system</artifactId>
+        </dependency>
+
+    </dependencies>
+
+</project>

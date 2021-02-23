@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('权限授权')" />
+    <th:block th:include="include :: datetimepicker-css" />
+    <style>
+        .toggle-switch {
+            padding-top: 0px !important;
+        }
+    </style>
+</head>
+<body class="gray-bg">
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <form role="form" class="form-inline">
+                    <div class="form-group">
+                        <label class="control-label">开门时段：</label>
+                        <select id="slotId" class="form-control">
+                            <option th:each="time:${times}" th:idx="${time.idx}" th:value="${time.id}" th:text="${time.name}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <label class="control-label">开门次数：</label>
+                        <select id="openNum" class="form-control">
+                            <option value="65535">无限制</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <label class="control-label">禁止节假日开门：</label>
+                        <label class="control-label toggle-switch switch-solid">
+                            <input id="holiday" type="checkbox">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <label class="control-label">特殊权限：</label>
+                        <select id="special" class="form-control" th:with="type=${@dict.getType('snk_special_type')}">
+                            <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="padding-left: 20px">
+                        <label class="control-label">有效期限：</label>
+                        <div class="input-group date">
+                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                            <input id="expTime" type="text" class="form-control" value="2089-12-31 23:59:59">
+                        </div>
+                    </div>
+                    <div class="form-group" style="padding-left: 50px; padding-top: 5px">
+                        <a class="btn btn-warning btn-sm" onclick="clearCdb()" shiro:hasPermission="door:device:clearCdb">
+                            清空权限数据
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>可选人员</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 search-collapse">
+                                    <form id="formId">
+                                        <input name="deptId" type="hidden" id="treeId"/>
+                                        <div class="select-list">
+                                            <ul>
+                                                <li>
+                                                    <label>姓名：</label>
+                                                    <input type="text" name="name"/>
+                                                </li>
+                                                <li>
+                                                    <input name="deptName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="选择所属部门">
+                                                </li>
+                                                <li>
+                                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId', 'bootstrap-table1')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="reset('formId', 'bootstrap-table1')"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table1"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-1" style="text-align: center; padding-top: 100px">
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="addAll()" title="添加全部"> >> </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="add()" title="添加"> &nbsp;>&nbsp; </a>
+                </div><br><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="del()" title="删除"> &nbsp;<&nbsp; </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="delAll()" title="删除全部"> << </a>
+                </div>
+            </div>
+            <div class="col-sm-5">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>已选人员</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table2"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="save" class="btn-group-sm" style="text-align: center;">
+            <a class="btn btn-success" onclick="savePass()" shiro:hasPermission="door:auth:pass">
+                允许已选人员通过已选门
+            </a>
+            <a class="btn btn-success" onclick="savePassUpload()" shiro:hasPermission="door:auth:passupload">
+                允许已选人员通过已选门并上传
+            </a>
+            &nbsp;&nbsp;
+            <a class="btn btn-danger" onclick="saveBan()" shiro:hasPermission="door:auth:ban">
+                禁止已选人员通过已选门
+            </a>
+            <a class="btn btn-danger" onclick="saveBanUpload()" shiro:hasPermission="door:auth:banupload">
+                禁止已选人员通过已选门并上传
+            </a>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <th:block th:include="include :: datetimepicker-js" />
+</body>
+<script th:inline="javascript">
+    var prefix = ctx + "door/device";
+    var yesNo = [[${@dict.getType('snk_yes_no')}]];
+    var loginName = [[${@permission.getPrincipalProperty('loginName')}]];
+    var grant = true;
+    var clear;
+    var param;
+    var deviceList;
+
+    $("#expTime").datetimepicker({
+        format: "yyyy-mm-dd hh:ii:ss",
+        autoclose: true
+    });
+
+    $(function () {
+        for (var i = 1; i <= 100; i++) {
+            $("#openNum").append("<option value=" + i + ">" + i + "</option>");
+        }
+        deviceList = parent.$("#bootstrap-table").bootstrapTable("getSelections");
+    });
+
+    $(function() {
+        var options = {
+            id: "bootstrap-table1",
+            url: ctx + "door/user/list",
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            pagination: false,
+            height: 342,
+            uniqueId: "id",
+            modalName: "可选人员",
+            columns: [{
+                checkbox: true,
+                formatter: function (value, row, index) {
+                    if ("1" == row.blacklist) {
+                        return {
+                            disabled: true,
+                        }
+                    } else if ($.common.isEmpty(row.cardNo) && $.common.isEmpty(row.photo) && $.common.isEmpty(row.fingerNum)) {
+                        return {
+                            disabled: true,
+                        }
+                    }
+                }
+            },
+            {
+                field : 'name',
+                title : '姓名'
+            },
+            {
+                field: 'userNo',
+                title: '人员编号'
+            },
+            {
+                field: 'deptName',
+                title: '部门'
+            },
+            {
+                field: 'blacklist',
+                title: '黑名单',
+                formatter: function(value, row, index) {
+                    var dictLabel = $.table.selectDictLabel(yesNo, value);
+                    if (value == 1) {
+                        return "<span style='color: red;'>" + dictLabel + "</span>";
+                    }
+                    return dictLabel;
+                }
+            }],
+            onLoadSuccess: function(data){
+                var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+                var ids = [];
+                $.each(table2, function(i, obj) {
+                    ids.push(obj.id);
+                });
+                $("#bootstrap-table1").bootstrapTable("remove", {
+                    field: "id",
+                    values: ids
+                });
+            }
+        };
+        $.table.init(options);
+    });
+
+    $(function() {
+        var options = {
+            id: "bootstrap-table2",
+            showSearch: false,
+            showRefresh: false,
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            pagination: false,
+            height: 415,
+            uniqueId: "id",
+            modalName: "已选人员",
+            columns: [{
+                checkbox: true,
+                formatter: function (value, row, index) {
+
+                }
+            },
+            {
+                field : 'name',
+                title : '姓名'
+            },
+            {
+                field: 'userNo',
+                title: '人员编号'
+            },
+            {
+                field : 'cardNo',
+                title : '卡号',
+                visible: false
+            },
+            {
+                field: 'deptName',
+                title: '部门'
+            }]
+        };
+        $.table.init(options);
+    });
+
+    function add() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getSelections");
+        if (table1.length == 0) {
+            $.modal.alertWarning("请至少选择一条记录");
+            return;
+        }
+        addUser(table1);
+    }
+
+    function del() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getSelections");
+        if (table2.length == 0) {
+            $.modal.alertWarning("请至少选择一个人员");
+            return;
+        }
+        delUser(table2);
+    }
+
+    function addAll() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getData");
+        if (table1.length == 0) {
+            $.modal.alertWarning("没有可以添加的人员");
+            return;
+        }
+        addUser(table1);
+    }
+
+    function delAll() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        if (table2.length == 0) {
+            $.modal.alertWarning("没有可以删除的人员");
+            return;
+        }
+        delUser(table2);
+    }
+
+    function delUser(table2) {
+        // 添加可选数据
+        $("#bootstrap-table1").bootstrapTable('prepend', table2);
+        // 必须重新加载数据， 不然getSelections会出问题
+        $("#bootstrap-table1").bootstrapTable('load', $("#bootstrap-table1").bootstrapTable('getData'));
+        // 删除已选数据
+        var ids = [];
+        $.each(table2, function(i, obj) {
+            ids.push(obj.id);
+        });
+        $("#bootstrap-table2").bootstrapTable("remove", {
+            field: "id",
+            values: ids
+        });
+    }
+
+    function addUser(table1) {
+        var addData = [];
+        $.each(table1, function (index, obj) {
+            if($.common.isEmpty(obj.cardNo) && obj.faceNum == 0 && obj.fingerNum == 0) {
+                return;
+            }
+            addData.push(obj);
+        })
+        // 添加已选数据
+        $("#bootstrap-table2").bootstrapTable('prepend', addData);
+        // 必须重新加载数据， 不然getSelections会出问题
+        $("#bootstrap-table2").bootstrapTable('load', $("#bootstrap-table2").bootstrapTable('getData'));
+        // 删除可选数据
+        var ids = [];
+        $.each(table1, function(i, obj) {
+            ids.push(obj.id);
+        });
+        $("#bootstrap-table1").bootstrapTable("remove", {
+            field: "id",
+            values: ids
+        });
+    }
+
+    /*用户管理-新增-选择部门树*/
+    function selectDeptTree() {
+        var treeId = $("#treeId").val();
+        var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+        var url = ctx + "system/dept/selectDeptTree/" + deptId;
+        var options = {
+            title: '选择部门',
+            width: "380",
+            url: url,
+            callBack: doSubmit
+        };
+        $.modal.openOptions(options);
+    }
+
+    function doSubmit(index, layero) {
+        var tree = layero.find("iframe")[0].contentWindow.$._tree;
+        if ($.tree.notAllowParents(tree)) {
+            var body = layer.getChildFrame('body', index);
+            $("#treeId").val(body.find('#treeId').val());
+            $("#treeName").val(body.find('#treeName').val());
+            layer.close(index);
+        }
+    }
+
+    function reset(formId, tableId) {
+        $("#treeId").val(null);
+        $.form.reset(formId, tableId);
+    }
+
+    function getAuthList(delFlag) {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        if (table2.length == 0) {
+            $.modal.alertWarning("请至少选择一条记录");
+            return null;
+        }
+        var slotId = $("#slotId").val();
+        var slotIdx = $("#slotId").find("option:selected").attr("idx");
+        var openNum = $("#openNum").val();
+        var holiday = $("input[id='holiday']").is(':checked') == true ? 1 : 0;
+        var special = $("#special").val();
+        var expTime = $("#expTime").val();
+        var authList = [];
+        $.each(table2, function (index, obj) {
+            $.each(deviceList, function (index1, obj1) {
+                var auth = {"userId": obj.id,
+                    "cardNo": obj.cardNo,
+                    "userNo": obj.userNo,
+                    "photo": obj.photo,
+                    "finger": obj.fingerNum,
+                    "deptName": obj.deptName,
+                    "postName": obj.postName,
+                    "userName": obj.name,
+                    "sn": obj1.sn,
+                    "deviceId": obj1.id,
+                    "deviceName": obj1.name,
+                    "positionName": obj1.positionName,
+                    "controlPort": obj1.controlPort,
+                    "slotId": slotId,
+                    "slotIdx": slotIdx,
+                    "openNum": openNum,
+                    "holiday": holiday,
+                    "special": special,
+                    "expTime": expTime,
+                    "cardStatus": "0",
+                    "status": "0",
+                    "admin": obj.admin,
+                    "createBy": loginName,
+                    "delFlag": delFlag};
+                authList.push(auth);
+            });
+        });
+        return authList;
+    }
+
+    function operate(operation) {
+        $.modal.open("操作记录", prefix + "/custom?operation=" + operation, null, null, null, true);
+    }
+
+    function savePass() {
+        var authList = getAuthList("0");
+        if ($.common.isEmpty(authList)) {
+            return;
+        }
+        $.ajax({
+            url: prefix + "/auth/add",
+            type: "post",
+            contentType: "application/json",
+            data: JSON.stringify(authList),
+            beforeSend: function () {
+                $.modal.loading("正在处理中，请稍后...");
+                $.modal.disable();
+            },
+            success: function(result) {
+                $.modal.closeLoading();
+                $.modal.enable();
+                $.modal.alertSuccess("操作成功")
+            }
+        });
+    }
+
+    function savePassUpload() {
+        clear = false;
+        var authList = getAuthList("0");
+        if ($.common.isEmpty(authList)) {
+            return;
+        }
+        deviceList[0].param = authList;
+        param = deviceList[0];
+        operate("WRITE_CARD_LIST");
+    }
+
+    function saveBan() {
+        var authList = getAuthList("1");
+        if ($.common.isEmpty(authList)) {
+            return;
+        }
+        $.ajax({
+            url: prefix + "/auth/ban",
+            type: "post",
+            contentType: "application/json",
+            data: JSON.stringify(authList),
+            beforeSend: function () {
+                $.modal.loading("正在处理中，请稍后...");
+                $.modal.disable();
+            },
+            success: function(result) {
+                $.modal.closeLoading();
+                $.modal.enable();
+                $.modal.alertSuccess("操作成功")
+            }
+        });
+    }
+
+    function saveBanUpload() {
+        clear = false;
+        var authList = getAuthList("1");
+        if ($.common.isEmpty(authList)) {
+            return;
+        }
+        deviceList[0].param = authList;
+        param = deviceList[0];
+        operate("BAN_CARD_LIST");
+    }
+
+    function clearCdb() {
+        $.modal.confirm("请注意：即将清除整个设备的权限数据，请确认您的操作？？", function() {    // 清空权限数据
+            clear = true;
+            param = deviceList[0];
+            operate("CLEAR_CARD_DATABASE");
+        });
+    }
+</script>
+</html>

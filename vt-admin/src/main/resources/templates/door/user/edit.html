@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <th:block th:include="include :: header('修改人员信息')" />
+    <style type="text/css">
+        .image {
+            width: 200px;
+            height: 200px;
+        }
+
+        /*选择文件上传*/
+        .new-upload {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .new-upload input[type=file] {
+            position: absolute;
+            display: none;
+        }
+
+        .upload-img {
+            display: inline-block;
+            padding-left: 5px;
+            padding-right: 5px;
+            margin-bottom: 5px;
+            height: 30px;
+            line-height: 30px;
+            font-size: 12px;
+            color: #FFFFFF;
+            background-color: #f8ac59;
+            border-radius: 5px;
+            text-decoration: none;
+            cursor: pointer;
+            border: 0px #fff solid;
+            box-shadow: 0px 0px 5px #B0B0B0;
+        }
+
+        .upload-img:hover {
+            background-color: #ec7e70;
+        }
+
+        .tc {
+            text-align: center;
+        }
+
+        .portrait {
+            position: relative;
+            display: inline-block;
+        }
+
+        .img-close {
+            position: absolute;
+            top: -4px;
+            right: 11px;
+            color: red;
+        }
+
+        .photo-close {
+            position: absolute;
+            top: -4px;
+            right: 4px;
+            color: red;
+        }
+
+        .fgt {
+            position: absolute;
+        }
+
+        .fgt1 {
+            top: 0;
+            left: 15px;
+        }
+
+        label > * {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-user-edit" th:object="${user}">
+    <div class="tabs-container">
+        <ul class="nav nav-tabs">
+            <li id="nav-1" class="active">
+                <a data-toggle="tab" href="#tab-1" aria-expanded="true">基本资料</a>
+            </li>
+            <li id="nav-2" class="">
+                <a data-toggle="tab" href="#tab-2" aria-expanded="false">指纹管理</a>
+            </li>
+            <li id="nav-3" class="">
+                <a data-toggle="tab" href="#tab-3" aria-expanded="false">人像管理</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane in active">
+                <div class="panel-body">
+                    <input name="deptId" type="hidden" th:field="*{deptId}" id="treeId"/>
+                    <input name="id" th:field="*{id}" type="hidden">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label class="col-sm-4 control-label" style="color: #0B4B94; font-weight: bold">用户号：[[${user.id}]]</label>
+                            <div class="col-sm-8">
+                                <div class="user-info-head action">
+                                    <a href="javascript:void(0)"><label for="inputImage"><img class="image" id="avatar" th:src="(*{photo} == null) ? @{/img/snk-user.png} : @{*{photo}}" ><a th:if="(*{photo} != null)" class="photo-close" th:onclick="'javascript:removePhoto();'"><i class="fa fa-times"></i></a></label> </a>
+                                </div>
+                                <div class="new-upload tc">
+                                    <span class="upload-img"><label for="inputImage">选择照片</label></span>
+                                    <span class="upload-img" onclick="photograph('avatar')">拍摄</span>
+                                    <input type="file" name="avatar" id="inputImage" accept="image/*"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">姓名：</label>
+                                <div class="col-sm-8">
+                                    <input name="name" class="form-control" type="text" th:field="*{name}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">人员编号：</label>
+                                <div class="col-sm-8">
+                                    <input id="userNo" name="userNo" class="form-control" type="text" th:field="*{userNo}" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">部门：</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input name="deptName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择归属部门" class="form-control" th:field="*{deptName}" required>
+                                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label is-required">手机号：</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input id="phone" name="phone" placeholder="请输入手机号码" class="form-control" type="text" maxlength="11" th:field="*{phone}" required>
+                                        <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">卡号：</label>
+                                <div class="col-sm-8">
+                                    <input id="cardNo" name="cardNo" class="form-control" type="text" th:field="*{cardNo}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">证件类型：</label>
+                                <div class="col-sm-8">
+                                    <select id="idType" name="idType" class="form-control m-b" th:with="type=${@dict.getType('snk_id_type')}" onchange="checkIdNo()">
+                                        <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{idType}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">证件号：</label>
+                                <div class="col-sm-8">
+                                    <input id="idNo" name="idNo" class="form-control" type="text" th:field="*{idNo}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">岗位：</label>
+                                <div class="col-sm-8">
+                                    <select id="post" name="postId" class="form-control m-b">
+                                        <option value="">请选择</option>
+                                        <option th:each="post:${posts}" th:value="${post.postId}" th:text="${post.postName}" th:disabled="${post.status == '1'}" th:field="*{postId}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">性别：</label>
+                                <div class="col-sm-8">
+                                    <select name="sex" class="form-control m-b" th:with="type=${@dict.getType('sys_user_sex')}">
+                                        <option value="">请选择</option>
+                                        <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{sex}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">民族：</label>
+                                <div class="col-sm-8">
+                                    <select name="nation" class="form-control m-b" th:with="type=${@dict.getType('snk_nation')}">
+                                        <option value="">请选择</option>
+                                        <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}" th:field="*{nation}"></option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">邮箱：</label>
+                                <div class="col-sm-8">
+                                    <div class="input-group">
+                                        <input name="email" class="form-control" type="text" maxlength="50" th:field="*{email}" placeholder="请输入邮箱">
+                                        <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">地址：</label>
+                                <div class="col-sm-8">
+                                    <textarea type="text" name="address" class="form-control" th:field="*{address}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label class="col-sm-4 control-label">管理员：</label>
+                                <div class="col-sm-8">
+                                    <label class="toggle-switch switch-solid">
+                                        <input type="checkbox" id="admin" th:checked="${user.admin == '0' ? false : true}">
+                                        <span></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-2" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div id="handDiv" class="col-sm-7">
+                            <img id="hand" th:src="@{/img/hand.jpg}">
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="form-group">
+                                <label class="col-xs-2 control-label">左手</label>
+                                <div class="col-xs-10">
+                                    <label class="check-box" onclick="finger(0)">
+                                        <input id="fgt0" type="checkbox">小指
+                                    </label>
+                                    <label class="check-box" onclick="finger(1)">
+                                        <input id="fgt1" type="checkbox">无名指
+                                    </label>
+                                    <label class="check-box" onclick="finger(2)">
+                                        <input id="fgt2" type="checkbox">中指
+                                    </label>
+                                    <label class="check-box" onclick="finger(3)">
+                                        <input id="fgt3" type="checkbox">食指
+                                    </label>
+                                    <label class="check-box" onclick="finger(4)">
+                                        <input id="fgt4" type="checkbox">拇指
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-xs-2 control-label">右手</label>
+                                <div class="col-xs-10">
+                                    <label class="check-box" onclick="finger(5)">
+                                        <input id="fgt5" type="checkbox">拇指
+                                    </label>
+                                    <label class="check-box" onclick="finger(6)">
+                                        <input id="fgt6" type="checkbox">食指
+                                    </label>
+                                    <label class="check-box" onclick="finger(7)">
+                                        <input id="fgt7" type="checkbox">中指
+                                    </label>
+                                    <label class="check-box" onclick="finger(8)">
+                                        <input id="fgt8" type="checkbox">无名指
+                                    </label>
+                                    <label class="check-box" onclick="finger(9)">
+                                        <input id="fgt9" type="checkbox">小指
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <span style="color: #1e9fff">提示：单击复选框可登记/删除指纹；一个人最多只能录入三个指纹</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-3" class="tab-pane">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="user-info-head action">
+                                <img class="image" id="static" style="display: none" th:src="@{/img/snk-user.png}" >
+                                <a href="javascript:void(0)"><label for="inputPortrait"><img class="image" id="portrait" th:src="@{/img/snk-user.png}" ></label> </a>
+                            </div>
+                            <div class="new-upload tc">
+                                <span class="upload-img"><label for="inputPortrait">选择照片</label></span>
+                                <span class="upload-img" onclick="photograph('portrait')">拍摄</span>
+                                <input type="file" name="portrait" id="inputPortrait" accept="image/*"/>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <p style="color: #ff0000">
+                                1.有选择照片、拍摄两种方式<br/>
+                                2.选择照片最佳大小为：200px * 200px<br/>
+                                3.每个人最多只能选择三张照片<br/>
+                                4.如果你觉得照片合适，请点击下方按钮添加到已选区域
+                            </p>
+                            <button class="btn btn-default btn-circle btn-lg" type="button" onclick="addPortrait()"><i class="fa fa-check"></i></button>
+                        </div>
+                    </div>
+                    <div class="ibox float-e-margins">
+                        <div class="ibox-title">
+                            <h5>已选</h5>
+                            <div class="ibox-tools">
+                                <a class="close-link">
+                                    <i class="fa fa-times" onclick="$('#portraitArray').empty()" title="清空"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div id="portraitArray" class="ibox-content" style="height: 236px">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "door/user";
+        $("#form-user-edit").validate({
+            ignore : "",//验证隐藏域,解决切换标签后隐藏域无法验证问题
+            onkeyup: false,
+            rules:{
+                phone:{
+                    isPhone:true,
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function() {
+                                return $("#id").val();
+                            },
+                            "phone": function() {
+                                return $.common.trim($("#phone").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                email:{
+                    email:true
+                },
+                idNo:{
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function() {
+                                return $("#id").val();
+                            },
+                            "idNo": function() {
+                                return $.common.trim($("#idNo").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                cardNo: {
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function() {
+                                return $("#id").val();
+                            },
+                            "cardNo": function() {
+                                var cardNo = $.common.trim($("#cardNo").val()).replace(/\b(0+)/gi,"");
+                                $("#cardNo").val(cardNo);
+                                return cardNo;
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                },
+                userNo:{
+                    remote: {
+                        url: prefix + "/checkUnique",
+                        type: "post",
+                        dataType: "json",
+                        data: {
+                            "id": function() {
+                                return $("#id").val();
+                            },
+                            "userNo": function() {
+                                return $.common.trim($("#userNo").val());
+                            }
+                        },
+                        dataFilter: function(data, type) {
+                            return $.validate.unique(data);
+                        }
+                    }
+                }
+            },
+            messages: {
+                "phone": {
+                    remote: "手机号已存在"
+                },
+                "idNo": {
+                    remote: "证件号已存在"
+                },
+                "cardNo": {
+                    remote: "卡号已存在"
+                },
+                "userNo": {
+                    remote: "人员编号已存在"
+                }
+            },
+            focusCleanup: true
+        });
+
+        $(function () {
+            var proofList = [[${user.proofList}]];
+            $.each(proofList, function (index, obj) {
+                if ("1" == obj.type) {
+                    var html = '<div id="portrait' + index + '" class="portrait"><img class="image" src="'+ ctx + obj.value.substr(1) + '"><a class="img-close" onclick="javascript:removePortrait(' + index + ');"><i class="fa fa-times"></i></a>&nbsp&nbsp&nbsp</div>';
+                    $("#portraitArray").append(html);
+                } else if ("2" == obj.type) {
+                    $("#handDiv").append('<img id="hand' + obj.finger + '" src="' + ctx + 'img/hand' + obj.finger + '.png" base64="' + obj.value + '" class="fgt fgt1">');
+                    $("#fgt" + obj.finger).parent().addClass("checked");
+                }
+            });
+        })
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                var data = $("#form-user-edit").serializeArray();
+                data.push({"name": "base64", "value": $("#avatar").attr("src")});
+                var photo = $("#avatar").attr("src");
+                if (photo != "/img/snk-user.png") {
+                    data.push({"name": "photo", "value": $("#avatar").attr("src")});
+                }
+                var imgs = $("#portraitArray").find('img');
+                var proofList = [];
+                $.each(imgs, function (i, obj) {
+                    var index = obj.src.indexOf("/profile");
+                    proofList.push({type: 1, value: obj.src.substr(index == -1 ? 0 : index, obj.src.lenght)});
+                });
+                for (var i = 0; i < 10; i++) {
+                    if ($("#hand" + i).length > 0) {
+                        proofList.push({type: 2, finger: i, value: $("#hand" + i).attr("base64")});
+                    }
+                }
+                data.push({"name": "proofList", "value": proofList});
+                var admin = $("input[id='admin']").is(':checked') == true ? 1 : 0;
+                data.push({"name": "admin", "value": admin});
+                var user = {};
+                $.each(data,function(i, obj){
+                    user[obj.name] = obj.value;
+                });
+                $.ajax({
+                    url : prefix + "/edit",
+                    type : "POST",
+                    contentType: "application/json",
+                    data : JSON.stringify(user),
+                    beforeSend: function () {
+                        $.modal.loading("正在处理中，请稍后...");
+                        $.modal.disable();
+                    },
+                    success: function(result) {
+                        if (typeof callback == "function") {
+                            callback(result);
+                        }
+                        $.operate.successCallback(result);
+                    }
+                });
+            } else {
+                if (!$("#nav-1").hasClass("active")) {
+                    $("#nav-2").removeClass("active");
+                    $("#nav-3").removeClass("active");
+                    $("#tab-2").removeClass("active");
+                    $("#tab-3").removeClass("active");
+                    $("#nav-1").addClass("active");
+                    $("#tab-1").addClass("active");
+                }
+            }
+        }
+
+        /*用户管理-修改-选择部门树*/
+        function selectDeptTree() {
+            var deptId = $.common.isEmpty($("#treeId").val()) ? "100" : $("#treeId").val();
+            var url = ctx + "system/dept/selectDeptTree/" + deptId;
+            var options = {
+                title: '选择部门',
+                width: "380",
+                url: url,
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero){
+            var tree = layero.find("iframe")[0].contentWindow.$._tree;
+            if ($.tree.notAllowParents(tree)) {
+                var body = layer.getChildFrame('body', index);
+                $("#treeId").val(body.find('#treeId').val());
+                $("#treeName").val(body.find('#treeName').val());
+                layer.close(index);
+            }
+        }
+
+        $('#inputImage').on('change', function() {
+            var reader = new FileReader();
+            var file = $('#inputImage')[0].files[0];
+            if (/^image\/\w+$/.test(file.type)) {
+                //当读取成功后触发
+                reader.readAsDataURL(file);
+                reader.onload=function(){
+                    document.getElementById("avatar").src = reader.result;
+                    $(".photo-close").show();
+                };
+            } else {
+                $.modal.alertWarning('请选择一个图片文件。');
+            }
+        });
+
+        $('#inputPortrait').on('change', function() {
+            var reader = new FileReader();
+            var file = $('#inputPortrait')[0].files[0];
+            if (/^image\/\w+$/.test(file.type)) {
+                //当读取成功后触发
+                reader.readAsDataURL(file);
+                reader.onload=function(){
+                    document.getElementById("portrait").src = reader.result;
+                };
+            } else {
+                $.modal.alertWarning('请选择一个图片文件。');
+            }
+        });
+
+        function photograph(imgId) {
+            $.modal.open('拍摄', ctx + 'common/photograph/' + imgId, 500, 500, null, true);
+        }
+
+        function addPortrait() {
+            var imgs = $("#portraitArray").find('img');
+            if (imgs.length == 3) {
+                $.modal.alertError('最多只能选择三张照片');
+                return;
+            }
+            var base64 = $("#portrait").attr("src");
+            if (base64 == $("#static").attr("src")) {
+                $.modal.alertError('请选择照片或者拍摄一张照片');
+                return;
+            }
+            $("#portrait").attr('src', $("#static").attr("src"));
+            $("#portraitArray").append('<div id="portrait'+ imgs.length +'" class="portrait"><img class="image" src="' + base64 + '" ><a class="img-close" onclick="removePortrait(' + imgs.length + ')"><i class="fa fa-times"></i></a>&nbsp&nbsp&nbsp</div>');
+        }
+
+        function removePortrait(id) {
+            $("#portrait" + id).remove()
+        }
+
+        function removePhoto() {
+            $("#avatar").attr("src", ctx + "img/snk-user.png");
+            $(".photo-close").hide();
+        }
+
+        var divName = "handDiv";
+        var fgtNum;
+        function finger(index) {
+            var bool = $("#fgt" + index).parent().hasClass("checked");
+            if (bool) {
+                $.modal.confirm("是否删除已录取指纹", function() {    // 删除
+                    $("#hand" + index).remove();
+                    $("#fgt" + index).parent().removeClass("checked");
+                });
+                $(".layui-layer-btn1").bind("click", function(){
+                    $("#fgt" + index).parent().addClass("checked");
+                });
+            } else {
+                if ($("#handDiv img").length == 4) {
+                    $.modal.alertWarning("一个人最多只能录入三个指纹");
+                    $(".layui-layer-btn0").bind("click", function(){
+                        $("#fgt" + index).parent().removeClass("checked");
+                    });
+                    return;
+                }
+                fgtNum = index;
+                layer.open({
+                    type: 2,
+                    area: [800 + 'px', 450 + 'px'],
+                    fix: false,
+                    //不固定
+                    maxmin: true,
+                    shade: 0.3,
+                    title: '指纹采集',
+                    content: ctx + 'door/finger/reader',
+                    btn: ['确定'],
+                    // 弹层外区域关闭
+                    shadeClose: false,
+                    yes: function(index, layero) {
+                        var iframeWin = layero.find('iframe')[0];
+                        iframeWin.contentWindow.submitHandler(index, layero);
+                    },
+                    cancel: function(index, layero) {
+                        var iframeWin = layero.find('iframe')[0];
+                        iframeWin.contentWindow.cancel(index, layero);
+                    }
+                });
+            }
+        }
+
+        function initFinger() {
+            for (var i = 0; i < 10; i++) {
+                if ($.common.isEmpty(document.getElementById("hand" + i))) {
+                    console.log(true);
+                    $("#fgt" + i).parent().removeClass("checked");
+                } else {
+                    console.log(false);
+                    $("#fgt" + i).parent().addClass("checked");
+                }
+            }
+        }
+    </script>
+</body>
+</html>

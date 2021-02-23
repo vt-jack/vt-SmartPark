@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('数据监控')" />
+</head>
+<body class="gray-bg">
+<div class="container-div">
+    <div class="col-sm-12 select-table table-striped">
+        <table id="bootstrap-table"></table>
+    </div>
+</div>
+<th:block th:include="include :: footer" />
+<script th:src="@{/js/socket.io.js}"></script>
+<script th:inline="javascript">
+    var accessType = [[${@dict.getType('snk_io_type')}]];
+    var recordType = [[${@dict.getType('snk_record_type')}]];
+    var recordFgType = [[${@dict.getType('snk_fg_record_type')}]];
+
+    $(function() {
+        var options = {
+            id: "bootstrap-table",
+            showSearch: false,
+            showRefresh: false,
+            showColumns: false,
+            showToggle: false,
+            showPageGo: false,
+            pagination: false,
+            modalName: "",
+            columns: [{
+                field: 'proofValue',
+                title: '凭证'
+            },
+            {
+                field: 'userName',
+                title: '人员姓名'
+            },
+            {
+                field: 'deptName',
+                title: '所属部门'
+            },
+            {
+                field: 'postName',
+                title: '岗位'
+            },
+            {
+                field: 'sn',
+                title: 'SN'
+            },
+            {
+                field: 'deviceId',
+                title: '设备ID',
+                visible: false
+            },
+            {
+                field: 'deviceName',
+                title: '设备名称'
+            },
+            {
+                field: 'positionName',
+                title: '安装位置'
+            },
+            {
+                field: 'deviceType',
+                title: '设备类型',
+                visible: false
+            },
+            {
+                field: 'type',
+                title: '记录类型',
+                formatter: function(value, row, index) {
+                    if ("1" == row.deviceType) {
+                        return $.table.selectDictLabel(recordType, value);
+                    } else {
+                        return $.table.selectDictLabel(recordFgType, value);
+                    }
+                }
+            },
+            {
+                field: 'describe',
+                title: '描述',
+                formatter: function(value) {
+                    return "<span style='color: blue;'>" + value + "</span>"
+                }
+            },
+            {
+                field: 'ioType',
+                title: '出入类型',
+                formatter: function(value, row, index) {
+                    return $.table.selectDictLabel(accessType, value);
+                }
+            },
+            {
+                field: 'createTime',
+                title: '时间'
+            },
+            {
+                field: 'serialNumber',
+                title: '序列号',
+                visible: false
+            }]
+        };
+        $.table.init(options);
+    });
+
+    var socket;
+    connect();
+    function connect() {
+        var row = parent.$("#bootstrap-table").bootstrapTable('getSelections');
+        var sns = [];
+        var ids = [];
+        $.each(row, function (index, obj) {
+            if (sns.indexOf(obj.sn) == -1) {
+                sns.push(obj.sn);
+            }
+            ids.push(obj.id);
+        });
+        var opts = {
+            query: 'userId=' + [[${@permission.getPrincipalProperty('userId')}]] + '&event=watch_device' + '&ids=' + ids.join() + '&sns=' + sns.join()
+        };
+        var host = [[${@config.getSocketIOHost()}]];
+        var port = [[${@config.getSocketIOPort()}]];
+        socket = io.connect('http://' + host + ':' + port, opts);
+
+        socket.on('connect', function () {
+        });
+
+        socket.on('watch_device', function (event) {
+            var result = JSON.parse(event.content);
+            var rows = $("#bootstrap-table").bootstrapTable('getData');
+            var index = -1;
+            var proofValue;
+            $.each(rows, function (idx, obj) {
+                if (obj.deviceId == result.deviceId && obj.serialNumber == result.serialNumber) {
+                    index = idx;
+                    proofValue = obj.proofValue;
+                    return;
+                }
+            });
+            if (index == -1) {
+                $("#bootstrap-table").bootstrapTable('insertRow', {
+                    index: 0,
+                    row: {
+                        sn: result.sn,
+                        proofValue: $.common.isEmpty(result.cardNo) ? "" : ("<i class='fa fa fa-vcard' title='卡号'></i>" + result.cardNo),
+                        userName: result.userName,
+                        deptName: result.deptName,
+                        postName: result.postName,
+                        deviceId: result.deviceId,
+                        deviceName: result.deviceName,
+                        deviceType: result.deviceType,
+                        positionName: result.positionName,
+                        type: result.type,
+                        describe: result.describe,
+                        ioType: result.ioType,
+                        createTime: result.createTime,
+                        serialNumber: result.serialNumber
+                    }
+                });
+            } else {
+                if (!$.common.isEmpty(result.face)) {
+                    if (!$.common.isEmpty(proofValue)) {
+                        proofValue += "<br/>";
+                    }
+                    proofValue += $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s'/>", 'auto', 'auto', 'self', "data:image/png;base64," + result.face);
+                } else if (!$.common.isEmpty(result.finger)) {
+                    if (!$.common.isEmpty(proofValue)) {
+                        proofValue += "<br/>";
+                    }
+                    proofValue += $.common.sprintf("<img class='img-circle img-xs' data-height='%s' data-width='%s' data-target='%s' src='%s'/>", 'auto', 'auto', 'self', "data:image/png;base64," + result.finger);
+                }
+                $("#bootstrap-table").bootstrapTable('updateRow', {
+                    index: index,
+                    row: {
+                        proofValue: proofValue
+                    }
+                });
+            }
+        });
+
+        socket.on('disconnect', function () {
+        });
+    }
+
+    function submitHandler() {
+        $.modal.close();
+    }
+
+</script>
+</body>
+</html>

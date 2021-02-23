@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('开门时段')" />
+    <link th:href="@{/css/timepicker.css}" rel="stylesheet"/>
+    <style type="text/css">
+        .span {
+            width: 80px;
+            height: 30px;
+            text-align: center;
+            padding-top: 7px;
+            float: left;
+            border: 1px solid #9ea6b9;
+        }
+
+        .time {
+            width: 40px;
+            border: 1px solid #e5e6e7;
+            border-radius: 4px;
+        }
+
+        .br {
+            border-right: 1px dashed red;
+        }
+
+        .bt {
+            border-top: 1px dashed red;
+        }
+
+    </style>
+</head>
+<body class="white-bg">
+<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+    <form class="form-horizontal m" id="form-timeslot">
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <div class="col-sm-2">
+                <select id="timeGroup" class="form-control m-b" onchange="selectTimeGroup()">
+                    <option th:each="time:${times}" th:value="${time.idx}" th:text="${time.name}"></option>
+                </select>
+            </div>
+            <div class="col-sm-1" style="padding-top: 5px">
+                <div class="col-sm-6">
+                    <a class="btn btn-success btn-xs" onclick="addTg()" shiro:hasPermission="door:timeslot:add">
+                        新增
+                    </a>
+                </div>
+                <div id="delDiv" class="col-sm-6">
+                    <a class="btn btn-danger btn-xs" onclick="delTg()" shiro:hasPermission="door:timeslot:remove">
+                        删除
+                    </a>
+                </div>
+            </div>
+            <div class="col-sm-3">
+                <input id="timeId" type="hidden">
+                <label class="col-sm-5 control-label is-required">时段名称：</label>
+                <div class="col-sm-7">
+                    <input id="timeName" class="form-control" onchange="checkUnique()" required>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-6">
+                <span class="span bg-primary" onclick="setClass(0)">星期一</span>
+                <span class="span" onclick="setClass(1)">星期二</span>
+                <span class="span" onclick="setClass(2)">星期三</span>
+                <span class="span" onclick="setClass(3)">星期四</span>
+                <span class="span" onclick="setClass(4)">星期五</span>
+                <span class="span" onclick="setClass(5)">星期六</span>
+                <span class="span" onclick="setClass(6)">星期日</span>
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-sm-3"></div>
+            <table class="col-sm-6" style="text-align: center;">
+                <tr>
+                    <td class="col-sm-3 br">
+                        <label>时间段1</label>
+                    </td>
+                    <td class="col-sm-3 br">
+                        <label>时间段2</label>
+                    </td>
+                    <td class="col-sm-3 br">
+                        <label>时间段3</label>
+                    </td>
+                    <td class="col-sm-3">
+                        <label>时间段4</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="br">
+                        <input id="time0B" type="text" class="time" value="00:00" disabled> - <input id="time0E" type="text" class="time" value="23:59" disabled>
+                    </td>
+                    <td class="br">
+                        <input id="time1B" type="text" class="time" value="00:00" disabled> - <input id="time1E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                    <td class="br">
+                        <input id="time2B" type="text" class="time" value="00:00" disabled> - <input id="time2E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                    <td>
+                        <input id="time3B" type="text" class="time" value="00:00" disabled> - <input id="time3E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="br"><br></td>
+                    <td class="br"></td>
+                    <td class="br"></td>
+                </tr>
+                <tr>
+                    <td class="br bt"><br></td>
+                    <td class="br bt"></td>
+                    <td class="br bt"></td>
+                    <td class="bt"></td>
+                </tr>
+                <tr>
+                    <td class="br">
+                        <label>时间段5</label>
+                    </td>
+                    <td class="br">
+                        <label>时间段6</label>
+                    </td>
+                    <td class="br">
+                        <label>时间段7</label>
+                    </td>
+                    <td>
+                        <label>时间段8</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="br">
+                        <input id="time4B" type="text" class="time" value="00:00" disabled> - <input id="time4E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                    <td class="br">
+                        <input id="time5B" type="text" class="time" value="00:00" disabled> - <input id="time5E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                    <td class="br">
+                        <input id="time6B" type="text" class="time" value="00:00" disabled> - <input id="time6E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                    <td>
+                        <input id="time7B" type="text" class="time" value="00:00" disabled> - <input id="time7E" type="text" class="time" value="00:00" disabled>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <br>
+        <br>
+        <div id="saveTg" class="btn-group-sm" style="text-align: center; display: none">
+            <a class="btn btn-success" onclick="saveTg()" shiro:hasPermission="door:timeslot:add,door:timeslot:edit">
+                <i class="fa fa-save"></i> 保存
+            </a>
+        </div>
+    </form>
+</div>
+<th:block th:include="include :: footer" />
+<script th:src="@{/js/timepicker.js}"></script>
+<script th:inline="javascript">
+    var prefix = ctx + "door/device/timeslot";
+    var globalTg = {};
+    var userId = [[${@permission.getPrincipalProperty('userId')}]];
+
+    $(function(){
+        selectTimeGroup();
+        // 初始化时间控件
+        for (var i = 0; i < 8; i++) {
+            $("#time"+ i +"B").hunterTimePicker();
+            $("#time"+ i +"E").hunterTimePicker();
+        }
+    });
+
+    var addFlag = false;
+    function addTg() {
+        $(".time").removeAttr("disabled");
+        $(".time").val("00:00");
+        var idx = parseInt($("#timeGroup option:last")[0].value) + 1;
+        $("#timeName").removeAttr("disabled");
+        $("#timeName").val("开门时段" + (idx < 10 ? "0" + idx : idx));
+        $("#saveTg").show();
+        $("#delDiv").hide();
+        addFlag = true;
+        globalTg = {};
+        initTimes(0);
+    }
+
+    function selectTimeGroup() {
+        $("#timeName").val($("#timeGroup option:checked").text());
+        var idx = $("#timeGroup").val();
+        if (idx == 1) {
+            $(".time").attr("disabled", "disabled");
+            $("#timeName").attr("disabled", "disabled");
+            $("#saveTg").hide();
+            $("#delDiv").hide();
+            globalTg = {};
+            addFlag = false;
+            initTimes(0);
+        } else {
+            $.ajax({
+                url: ctx + "door/device/timeslot/SYSTEM-" + userId + "/" + idx,
+                type: "GET",
+                data: null,
+                success: function(result) {
+                    if ($.common.isEmpty(result)) {
+                        $.modal.alertWarning("数据已被删除，请刷新页面");
+                        return;
+                    }
+                    globalTg = JSON.parse(result.timeGroup);
+                    addFlag = false;
+                    $(".time").removeAttr("disabled");
+                    $("#timeName").removeAttr("disabled");
+                    $("#saveTg").show();
+                    $("#delDiv").show();
+                    initTimes(0);
+                }
+            });
+        }
+    }
+
+    function setClass(idx) {
+        setGlobalTg();
+        initTimes(idx);
+    }
+
+    function initTimes(idx) {
+        $(".span").removeClass("bg-primary");
+        $(".span")[idx].className += " bg-primary";
+        var time;
+        switch (idx) {
+            case 0:
+                time = globalTg.time0;
+                break;
+            case 1:
+                time = globalTg.time1;
+                break;
+            case 2:
+                time = globalTg.time2;
+                break;
+            case 3:
+                time = globalTg.time3;
+                break;
+            case 4:
+                time = globalTg.time4;
+                break;
+            case 5:
+                time = globalTg.time5;
+                break;
+            case 6:
+                time = globalTg.time6;
+                break;
+            case 7:
+                time = globalTg.time7;
+                break;
+        }
+        if (!$.common.isEmpty(time)) {
+            $.each(time, function(index, obj) {
+                if (!$.common.isEmpty(obj.start)) {
+                    $("#time" + index + "B").val(obj.start);
+                }
+                if (!$.common.isEmpty(obj.end)) {
+                    $("#time" + index + "E").val(obj.end);
+                }
+            });
+        } else {
+            for (var i = 0; i < 8; i++) {
+                $("#time" + i + "B").val("00:00");
+                if (i == 0 && $("#timeGroup").val() == 1 && addFlag == false) {
+                    $("#time" + i + "E").val("23:59");
+                } else {
+                    $("#time" + i + "E").val("00:00");
+                }
+            }
+        }
+    }
+
+    function setGlobalTg() {
+        var timeGroup = [];
+        for (var i = 0; i < 8; i++) {
+            if ($("#time" + i + "B").val() == "00:00" && $("#time" + i + "E").val() == "00:00") {
+                continue;
+            }
+            var timeJson = {"start": $("#time" + i + "B").val(), "end": $("#time" + i + "E").val()};
+            timeGroup.push(timeJson);
+        }
+        $.each($(".span"), function (index, obj) {
+            if (obj.classList.contains("bg-primary")) {
+                switch (index) {
+                    case 0:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time0;
+                        } else {
+                            globalTg.time0 = timeGroup;
+                        }
+                        break;
+                    case 1:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time1;
+                        } else {
+                            globalTg.time1 = timeGroup;
+                        }
+                        break;
+                    case 2:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time2;
+                        } else {
+                            globalTg.time2 = timeGroup;
+                        }
+                        break;
+                    case 3:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time3;
+                        } else {
+                            globalTg.time3 = timeGroup;
+                        }
+                        break;
+                    case 4:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time4;
+                        } else {
+                            globalTg.time4 = timeGroup;
+                        }
+                        break;
+                    case 5:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time5;
+                        } else {
+                            globalTg.time5 = timeGroup;
+                        }
+                        break;
+                    case 6:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time6;
+                        } else {
+                            globalTg.time6 = timeGroup;
+                        }
+                        break;
+                    case 7:
+                        if ($.isEmptyObject(timeGroup)) {
+                            delete globalTg.time7;
+                        } else {
+                            globalTg.time7 = timeGroup;
+                        }
+                        break;
+                }
+            }
+        });
+    }
+
+    function saveTg() {
+        setGlobalTg();
+        var timeName = $("#timeName").val();
+        if ($.common.isEmpty(timeName)) {
+            $.modal.alertError("时段名称必填");
+            return;
+        }
+        var idx;
+        if (addFlag) {  // 新增
+            if ($.isEmptyObject(globalTg)) {
+                $.modal.alertError("无有效时段，不能保存");
+                return;
+            }
+            $.ajax({
+                url: ctx + "door/device/timeslot/maxIdx/SYSTEM-" + userId,
+                async: false,
+                type: "GET",
+                data: null,
+                success: function (result) {
+                    idx = result + 1;
+                    if (idx == 65) {
+                        $.modal.alertError("最多只能设置64个时段");
+                        return;
+                    }
+                    var data = {"sn": "SYSTEM-" + userId, "name": timeName, "idx": idx, "timeGroup": JSON.stringify(globalTg)};
+                    $.operate.saveModal(prefix + "/add", data);
+                    $("#timeGroup").append("<option value=" + idx + ">" + timeName + "</option>");
+                    $("#timeGroup").val(idx);
+                    $("#delDiv").show();
+                }
+            });
+        } else {
+            idx = $("#timeGroup").val();
+            if ($.isEmptyObject(globalTg)) {
+                $.modal.confirm("无有效时段，点击确认将删除此时段", function() {    // 删除
+                    var data = {"sn": "SYSTEM-" + userId, "idx": idx};
+                    $.operate.saveModal(prefix + "/remove", data);
+                    $("#timeGroup option[value=" + idx + "]").remove();
+                    selectTimeGroup();
+                });
+            } else {    // 修改
+                var data = {"sn": "SYSTEM-" + userId, "name": timeName, "idx": idx, "timeGroup": JSON.stringify(globalTg)};
+                $.operate.saveModal(prefix + "/edit", data);
+            }
+        }
+        addFlag = false;
+    }
+
+    function checkUnique() {
+        var timeName = $("#timeName").val();
+        if ("开门时段01" == timeName) {
+            $.modal.alertError("时段名称已存在");
+            $("#timeName").val(null);
+            return;
+        }
+        var uniqueParam = {"sn": "SYSTEM-" + userId, "name": timeName};
+        if (!addFlag) {
+            uniqueParam.idx = $("#timeGroup").val();
+        }
+        $.ajax({
+            url: ctx + "door/device/timeslot/checkUnique",
+            async: false,
+            type: "POST",
+            dataType: "json",
+            data: uniqueParam,
+            success: function (result) {
+                if ("1" == result) {
+                    $("#timeName").val(null);
+                    $.modal.alertError("时段名称已存在");
+                }
+            }
+        });
+    }
+
+    function delTg() {
+        var idx = $("#timeGroup").val();
+        $.modal.confirm("确认要删除" + $("#timeGroup option:checked").text() + "？", function() {    // 删除
+            var data = {"sn": "SYSTEM-" + userId, "idx": idx};
+            $.operate.saveModal(prefix + "/remove", data);
+            $("#timeGroup option[value=" + idx + "]").remove();
+            selectTimeGroup();
+        });
+    }
+
+</script>
+</body>
+</html>

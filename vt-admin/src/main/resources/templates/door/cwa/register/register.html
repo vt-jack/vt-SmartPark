@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('手动登记列表')" />
+</head>
+<body class="gray-bg">
+    <div class="ui-layout-center">
+        <div class="container-div">
+            <div class="row">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId">
+                        <input id="treeId" name="deptId" hidden>
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>登记类型：</label>
+                                    <select id="type" name="type" class="form-control m-b" th:with="type=${@dict.getType('snk_register_type')}">
+                                        <option value="">请选择</option>
+                                        <option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+                                    </select>
+                                </li>
+                                <li>
+                                    <label>姓名：</label>
+                                    <input type="text" name="userName"/>
+                                </li>
+                                <li>
+                                    <label>部门：</label>
+                                    <input name="deptName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择所属部门">
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="btn-group-sm" id="toolbar" role="group">
+                    <a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="door:register:add">
+                        <i class="fa fa-plus"></i> 添加
+                    </a>
+                    <a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="door:register:remove">
+                        <i class="fa fa-remove"></i> 删除
+                    </a>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var editFlag = [[${@permission.hasPermi('door:register:edit')}]];
+        var removeFlag = [[${@permission.hasPermi('door:register:remove')}]];
+        var registerType = [[${@dict.getType('snk_register_type')}]];
+        var leaveType = [[${@dict.getType('snk_leave_type')}]];
+        var prefix = ctx + "door/cwa/register";
+
+        $(function() {
+            var options = {
+                uniqueId: "id",
+                url: prefix + "/list",
+                createUrl: prefix + "/add",
+                removeUrl: prefix + "/remove",
+                clickToSelect: true,
+                modalName: "手动登记",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'type',
+                    title: '登记类型',
+                    formatter: function(value, row, index) {
+                        if ("1" == value) {
+                            return $.table.selectDictLabel(registerType, value) + "【" + $.table.selectDictLabel(leaveType, value) + "】";
+                        }
+                        return $.table.selectDictLabel(registerType, value);
+                    }
+                },
+                {
+                    field: 'userName',
+                    title: '姓名'
+                },
+                {
+                    field: 'startTime',
+                    title: '开始时间'
+                },
+                {
+                    field: 'endTime',
+                    title: '结束时间'
+                },
+                {
+                    field: 'leaveTime',
+                    title: '小时数'
+                },
+                {
+                    field: 'remark',
+                    title: '备注'
+                },
+                {
+                    field: 'createBy',
+                    title: '创建者'
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间'
+                }]
+            };
+            $.table.init(options);
+        });
+
+        /*用户管理-新增-选择部门树*/
+        function selectDeptTree() {
+            var treeId = $("#treeId").val();
+            var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+            var url = ctx + "system/dept/selectDeptTree/" + deptId;
+            var options = {
+                title: '选择部门',
+                width: "380",
+                url: url,
+                callBack: doSubmit
+            };
+            $.modal.openOptions(options);
+        }
+
+        function doSubmit(index, layero) {
+            var tree = layero.find("iframe")[0].contentWindow.$._tree;
+            if ($.tree.notAllowParents(tree)) {
+                var body = layer.getChildFrame('body', index);
+                $("#treeId").val(body.find('#treeId').val());
+                $("#treeName").val(body.find('#treeName').val());
+                layer.close(index);
+            }
+        }
+
+    </script>
+</body>
+</html>

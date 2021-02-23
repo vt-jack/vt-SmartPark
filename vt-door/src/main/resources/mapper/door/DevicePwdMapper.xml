@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.DevicePwdMapper">
+    
+    <resultMap type="Pwd" id="DevicePwdResult">
+        <result property="id"           column="id"    />
+        <result property="deviceId"     column="device_id"    />
+        <result property="password"     column="password"    />
+        <result property="openTimes"    column="open_times"    />
+        <result property="expiry"       column="expiry"    />
+        <result property="sn"           column="sn"    />
+        <result property="deviceName"   column="device_name"    />
+        <result property="modelType"    column="model_type"    />
+        <result property="positionName" column="position_name"    />
+        <result property="controlPort"  column="control_port"    />
+        <result property="delFlag"      column="del_flag"    />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"    />
+        <result property="updateBy"     column="update_by"    />
+        <result property="updateTime"   column="update_time"    />
+    </resultMap>
+
+    <sql id="selectPwdVo">
+        select a.id, a.sn, a.device_id, a.password, a.open_times, a.expiry, b.name as device_name, c.type as model_type, d.name as position_name,
+               b.control_port, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_device_pwd a
+          left join snk_device b on b.id = a.device_id
+          left join snk_device_model c on c.model = b.model
+          left join snk_device_position d on d.id = b.position_id
+    </sql>
+
+    <select id="selectPwdList" parameterType="Pwd" resultMap="DevicePwdResult">
+        <include refid="selectPwdVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="sn != null and sn != ''"> and b.sn = #{sn}</if>
+            <if test="deviceName != null and deviceName != ''"> and b.name = #{deviceName}</if>
+            order by create_time desc
+        </where>
+    </select>
+    
+    <select id="selectPwdById" parameterType="Long" resultMap="DevicePwdResult">
+        <include refid="selectPwdVo"/>
+        where a.id = #{id}
+    </select>
+
+    <delete id="deletePwdByDeviceIds" parameterType="String">
+       update snk_device_pwd set del_flag = '1'
+        where del_flag = '0'
+          and device_id in
+        <foreach item="deviceId" collection="array" open="(" separator="," close=")">
+            #{deviceId}
+        </foreach>
+    </delete>
+
+    <select id="selectPwdBySn" parameterType="String" resultMap="DevicePwdResult">
+        <include refid="selectPwdVo"/>
+        where a.del_flag = '0'
+          and b.sn = #{sn}
+    </select>
+        
+    <insert id="insertPwd" parameterType="Pwd">
+        insert into snk_device_pwd(sn, device_id, password, open_times, expiry, create_by, create_time)
+        values (#{sn}, #{deviceId}, #{password}, #{openTimes}, #{expiry}, #{createBy}, sysdate())
+    </insert>
+
+    <update id="updatePwd" parameterType="Pwd">
+        update snk_device_pwd
+           set open_times = #{openTimes},
+               expiry = #{expiry},
+               del_flag = #{delFlag},
+               update_by = #{createBy},
+               update_time = sysdate()
+         where del_flag = '0'
+           and device_id = #{deviceId}
+           and password = #{password}
+    </update>
+
+    <delete id="deletePwdById" parameterType="Long">
+        update snk_device_pwd set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deletePwdByIds" parameterType="String">
+        update snk_device_pwd set del_flag = '1'
+         where del_flag = '0'
+           and id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deletePwdBySn" parameterType="String">
+        update snk_device_pwd set del_flag = '1' where del_flag = '0' and sn = #{sn}
+    </delete>
+
+</mapper>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <th:block th:include="include :: header('修改企业信息')" />
+</head>
+<body class="white-bg">
+    <div class="wrapper wrapper-content animated fadeInRight ibox-content">
+        <div class="main-content">
+            <form class="form-horizontal m" id="form-company-edit" th:object="${company}">
+            <input name="id" th:field="*{id}" type="hidden">
+            <div class="row">
+                <div class="col-sm-8">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label is-required">企业名称：</label>
+                        <div class="col-sm-9">
+                            <input name="name" class="form-control" type="text" th:field="*{name}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">负责人：</label>
+                        <div class="col-sm-6">
+                            <input name="leader" class="form-control" type="text" th:field="*{leader}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">负责人手机：</label>
+                        <div class="col-sm-6">
+                            <div class="input-group">
+                                <input name="leaderPhone" placeholder="请输入手机号码" class="form-control" type="text" maxlength="11" th:field="*{leaderPhone}" required>
+                                <span class="input-group-addon"><i class="fa fa-mobile"></i></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">地址：</label>
+                        <div class="col-sm-9">
+                            <input name="address" class="form-control" th:field="*{address}" type="text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </form>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var prefix = ctx + "door/visit/company"
+
+        function submitHandler() {
+            if ($.validate.form()) {
+                $.operate.save(prefix + "/edit",  $('#form-company-edit').serialize());
+            }
+        }
+    </script>
+</body>
+</html>

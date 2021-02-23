@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.CwaRegisterMapper">
+    
+    <resultMap type="CwaRegister" id="CwaRegisterResult">
+        <result property="id"    column="id"    />
+        <result property="type"    column="type"    />
+        <result property="leaveType"    column="leave_type"    />
+        <result property="userId"    column="user_id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="deptName"    column="dept_name"    />
+        <result property="startTime"    column="start_time"    />
+        <result property="endTime"    column="end_time"    />
+        <result property="leaveTime"    column="leave_time"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectCwaRegisterVo">
+        select a.id, a.type, a.leave_type, a.user_id, b.name as user_name, c.dept_name, a.start_time, a.end_time, a.leave_time, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_cwa_register a
+          left join snk_user b on b.id = a.user_id
+          left join sys_dept c on c.dept_id = b.dept_id
+    </sql>
+
+    <select id="selectCwaRegisterList" parameterType="CwaRegister" resultMap="CwaRegisterResult">
+        <include refid="selectCwaRegisterVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="userName != null and userName != ''"> and b.name = #{userName}</if>
+            <if test="deptId != null"> and b.dept_id = #{deptId}</if>
+            <if test="type != null and type != ''"> and a.type = #{type}</if>
+        </where>
+        order by a.create_time desc
+    </select>
+
+    <select id="selectCwaRegisterByUserId" parameterType="CwaRegister" resultMap="CwaRegisterResult">
+        <include refid="selectCwaRegisterVo"/>
+        where a.del_flag = '0'
+          and a.user_id = #{userId}
+          and (date_format(a.start_time, '%Y-%m') = #{yyyyMM} or date_format(a.end_time, '%Y-%m') = #{yyyyMM})
+    </select>
+    
+    <insert id="insertCwaRegister" parameterType="CwaRegister" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_cwa_register
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="type != null and type != ''">type,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="startTime != null">start_time,</if>
+            <if test="endTime != null">end_time,</if>
+            <if test="leaveTime != null">leave_time,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="startTime != null">#{startTime},</if>
+            <if test="endTime != null">#{endTime},</if>
+            <if test="leaveTime != null">#{leaveTime},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <select id="selectCwaRegisterById" parameterType="Long" resultMap="CwaRegisterResult">
+        <include refid="selectCwaRegisterVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteCwaRegisterById" parameterType="Long">
+        update snk_cwa_register set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteCwaRegisterByIds" parameterType="String">
+        update snk_cwa_register set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

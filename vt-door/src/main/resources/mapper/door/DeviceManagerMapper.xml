@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.DeviceManagerMapper">
+
+	<resultMap type="Manager" id="DeviceManagerResult">
+		<id     property="id"     	  column="id"     />
+		<result property="userId"     column="user_id"   />
+		<result property="deviceId"     column="device_id"   />
+		<result property="delFlag"    column="del_flag"    />
+		<result property="createBy"   column="create_by"   />
+		<result property="createTime" column="create_time" />
+		<result property="updateBy"   column="update_by"   />
+		<result property="updateTime" column="update_time" />
+		<result property="userName" column="user_name" />
+		<result property="deptName" column="dept_name" />
+	</resultMap>
+
+	<sql id="selectManagerVo">
+        select p.id, p.user_id, p.device_id, p.del_flag, p.create_by, p.create_time, a.user_name, b.dept_name
+        from snk_device_manager p
+        left join sys_user a on a.user_id = p.user_id
+        left join sys_dept b on b.dept_id = a.dept_id
+    </sql>
+    
+	<select id="selectManagerList" parameterType="Manager" resultMap="DeviceManagerResult">
+        <include refid="selectManagerVo"/>
+        where p.del_flag = '0'
+		<if test="deviceId != null">
+			AND p.device_id = #{deviceId}
+		</if>
+		<if test="searchValue != null and searchValue != ''">
+		    AND a.user_name like concat('%', #{searchValue}, '%')
+		</if>
+		order by p.create_time desc
+    </select>
+	
+	<select id="selectPositionById" parameterType="Long" resultMap="DeviceManagerResult">
+		<include refid="selectManagerVo"/>
+		where p.del_flag = '0'
+		  and p.id = #{id}
+	</select>
+
+	<insert id="insertPosition" parameterType="Manager">
+ 		insert into snk_device_manager(
+ 			<if test="id != null and id != 0">id,</if>
+ 			<if test="userId != null">user_id,</if>
+ 			<if test="deviceId != null">device_id,</if>
+ 			<if test="createBy != null and createBy != ''">create_by,</if>
+			<if test="createTime != null">create_time,</if>
+ 		)values(
+ 			<if test="id != null and id != 0">#{id},</if>
+			<if test="userId != null">#{userId},</if>
+			<if test="deviceId != null">#{deviceId},</if>
+ 			<if test="createBy != null and createBy != ''">#{createBy},</if>
+			<if test="createTime != null">#{createTime},</if>
+ 		)
+	</insert>
+
+	<insert id="insertManagerBatch" parameterType="Manager">
+		insert into snk_device_manager(user_id, device_id, create_by, create_time)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">
+			(#{item.userId}, #{item.deviceId}, #{item.createBy}, sysdate())
+		</foreach>
+	</insert>
+	
+	<delete id="deleteManagerByIds" parameterType="String">
+		update snk_device_manager set del_flag = '1' where id in
+		<foreach item="id" collection="array" open="(" separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<delete id="deleteManagerByDeviceIds" parameterType="String">
+		update snk_device_manager set del_flag = '1'
+		 where del_flag = '0'
+		  and device_id in
+		<foreach item="deviceId" collection="array" open="(" separator="," close=")">
+			#{deviceId}
+		</foreach>
+	</delete>
+</mapper>

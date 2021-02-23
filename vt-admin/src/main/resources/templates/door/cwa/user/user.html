@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('考勤人员列表')" />
+</head>
+<body class="gray-bg">
+    <div class="wrapper wrapper-content animated fadeInRight">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <form role="form" class="form-inline">
+                    <div class="form-group">
+                        <label class="control-label is-required">考勤规则：</label>
+                        <select id="ruleId" class="form-control" required>
+                            <option value="">请选择</option>
+                            <option th:each="rule:${rules}" th:value="${rule.id}" th:text="${rule.name}"></option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>可选考勤人员</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 search-collapse">
+                                    <form id="formId1">
+                                        <input id="treeId" name="deptId" hidden>
+                                        <div class="select-list">
+                                            <ul>
+                                                <li>
+                                                    <label>姓名：</label>
+                                                    <input id="name" type="text" name="name" style="width: 100px"/>
+                                                </li>
+                                                <li>
+                                                    <label>部门：</label>
+                                                    <input name="deptName" onclick="selectDeptTree()" id="treeName" type="text" placeholder="请选择所属部门" style="width: 150px">
+                                                </li>
+                                                <li>
+                                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId1', 'bootstrap-table1');"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                                    <a class="btn btn-warning btn-rounded btn-sm" onclick="reset();"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table1"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-1" style="text-align: center; padding-top: 100px">
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="addAll()" title="添加全部" shiro:hasPermission="door:cwaUser:add"> >> </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="add()" title="添加" shiro:hasPermission="door:cwaUser:add"> &nbsp;>&nbsp; </a>
+                </div><br><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="del()" title="删除" shiro:hasPermission="door:cwaUser:remove"> &nbsp;<&nbsp; </a>
+                </div><br>
+                <div class="btn-group-sm">
+                    <a class="btn btn-success btn-xs" onclick="delAll()" title="删除全部" shiro:hasPermission="door:cwaUser:remove"> << </a>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>已选考勤人员</h5>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="container-div">
+                            <div class="row">
+                                <div class="col-sm-12 search-collapse">
+                                    <form id="formId2">
+                                        <div class="select-list">
+                                            <ul>
+                                                <li>
+                                                    <label>姓名：</label>
+                                                    <input type="text" name="name" style="width: 100px"/>
+                                                </li>
+                                                <li>
+                                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId2', 'bootstrap-table2')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col-sm-12 select-table table-striped">
+                                    <table id="bootstrap-table2"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<th:block th:include="include :: footer" />
+<script th:inline="javascript">
+    var prefix = ctx + "door/cwa/user";
+    var sex = [[${@dict.getType('sys_user_sex')}]];
+
+    $(function() {
+        var options = {
+            uniqueId: "id",
+            id: "bootstrap-table1",
+            url: prefix + "/userList",
+            showColumns: false,
+            showToggle: false,
+            clickToSelect: true,
+            modalName: "人员列表",
+            pageList: [10, 25, 50, 200, 500],
+            columns: [{
+                field: 'state',
+                checkbox: true
+            },
+            {
+                field: 'name',
+                title: '姓名'
+            },
+            {
+                field: 'userNo',
+                title: '人员编号'
+            },
+            {
+                field: 'sex',
+                title: '性别',
+                formatter: function(value, row, index) {
+                    return $.table.selectDictLabel(sex, value);
+                }
+            },
+            {
+                field: 'deptName',
+                title: '所属部门'
+            }]
+        };
+        $.table.init(options);
+    });
+
+    $(function() {
+        var options = {
+            uniqueId: "id",
+            id: "bootstrap-table2",
+            toolbar: "toolbar2",
+            url: prefix + "/list",
+            showColumns: false,
+            showToggle: false,
+            modalName: "考勤人员",
+            pageList: [10, 25, 50, 500],
+            columns: [{
+                field: 'state',
+                checkbox: true
+            },
+            {
+                field: 'userId',
+                title: '人员ID',
+                visible: false
+            },
+            {
+                field: 'userName',
+                title: '姓名'
+            },
+            {
+                field: 'userNo',
+                title: '人员编号'
+            },
+            {
+                field: 'sex',
+                title: '性别',
+                formatter: function(value, row, index) {
+                    return $.table.selectDictLabel(sex, value);
+                }
+            },
+            {
+                field: 'deptName',
+                title: '所属部门'
+            },
+            {
+                field: 'ruleName',
+                title: '规则名称'
+            },
+            {
+                field: 'createBy',
+                title: '创建人'
+            },
+            {
+                field: 'createTime',
+                title: '创建时间'
+            }]
+        };
+        $.table.init(options);
+    });
+
+    /*用户管理-新增-选择部门树*/
+    function selectDeptTree() {
+        var treeId = $("#treeId").val();
+        var deptId = $.common.isEmpty(treeId) ? "100" : $("#treeId").val();
+        var url = ctx + "system/dept/selectDeptTree/" + deptId;
+        var options = {
+            title: '选择部门',
+            width: "380",
+            url: url,
+            callBack: doSubmit
+        };
+        $.modal.openOptions(options);
+    }
+
+    function doSubmit(index, layero) {
+        var tree = layero.find("iframe")[0].contentWindow.$._tree;
+        if ($.tree.notAllowParents(tree)) {
+            var body = layer.getChildFrame('body', index);
+            $("#treeId").val(body.find('#treeId').val());
+            $("#treeName").val(body.find('#treeName').val());
+            layer.close(index);
+        }
+    }
+
+    function reset() {
+        $("#treeId").val(null);
+        $("#treeName").val(null);
+        $("#name").val(null);
+        $("#bootstrap-table1").bootstrapTable("refresh");
+    }
+
+    function add() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getSelections");
+        if (table1.length == 0) {
+            $.modal.alertWarning("请至少选择一条记录");
+            return;
+        }
+        addCwaUser(table1);
+    }
+
+    function del() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getSelections");
+        if (table2.length == 0) {
+            $.modal.alertWarning("请至少选择一条记录");
+            return;
+        }
+        delCwaUser(table2);
+    }
+
+    function addAll() {
+        var table1 = $("#bootstrap-table1").bootstrapTable("getData");
+        if (table1.length == 0) {
+            $.modal.alertWarning("没有可以添加的记录");
+            return;
+        }
+        addCwaUser(table1);
+    }
+
+    function delAll() {
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        if (table2.length == 0) {
+            $.modal.alertWarning("没有可以删除的记录");
+            return;
+        }
+        delCwaUser(table2);
+    }
+
+    function addCwaUser(table1) {
+        var ruleId = $("#ruleId").val();
+        if ($.common.isEmpty(ruleId)) {
+            $.modal.alertWarning("请选择考勤规则");
+            return;
+        }
+        var table2 = $("#bootstrap-table2").bootstrapTable("getData");
+        var userList = [];
+        $.each(table1, function (i, tab1) {
+            var isExists = false;
+            $.each(table2, function (j, tab2) {
+                if (tab1.id == tab2.userId) {
+                    isExists = true;
+                    return false;
+                }
+            });
+            if (!isExists) {
+                var user = {"userId": tab1.id,
+                    "ruleId": ruleId};
+                userList.push(user);
+            }
+        });
+        if (userList.length > 0) {
+            $.ajax({
+                url : prefix + "/add",
+                type : "POST",
+                contentType: "application/json",
+                data : JSON.stringify(userList),
+                async : false,
+                success : function(data) {
+                    $("#bootstrap-table1").bootstrapTable('refresh');
+                    $("#bootstrap-table2").bootstrapTable('refresh');
+                }
+            });
+        }
+    }
+
+    function delCwaUser(table2) {
+        var ids = [];
+        $.each(table2, function(i, obj) {
+            ids.push(obj.id);
+        });
+        $.ajax({
+            url : prefix + "/remove",
+            type : "POST",
+            dataType: "json",
+            data : {"ids": ids.join()},
+            async : false,
+            success : function(data) {
+                $("#bootstrap-table1").bootstrapTable('refresh');
+                $("#bootstrap-table2").bootstrapTable('refresh');
+            }
+        });
+    }
+
+</script>
+</body>
+</html>

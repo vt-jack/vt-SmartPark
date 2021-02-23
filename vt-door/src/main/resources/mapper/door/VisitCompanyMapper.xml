@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.snk.door.mapper.VisitCompanyMapper">
+
+    <resultMap type="VisitCompany" id="VisitCompanyResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="leader"    column="leader"    />
+        <result property="leaderPhone"    column="leader_phone"    />
+        <result property="address"    column="address"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+    </resultMap>
+
+    <sql id="selectVisitCompanyVo">
+        select a.id, a.name, a.leader, a.leader_phone, a.address, a.del_flag, a.create_by, a.create_time, a.update_by, a.update_time
+          from snk_visit_company a
+          left join sys_user b on a.create_by = b.login_name
+    </sql>
+
+    <select id="selectVisitCompanyList" parameterType="VisitCompany" resultMap="VisitCompanyResult">
+        <include refid="selectVisitCompanyVo"/>
+        <where>
+            a.del_flag = '0'
+            <if test="name != null and name != ''"> and a.name like concat('%', #{name}, '%')</if>
+        </where>
+        <!-- 数据范围过滤 -->
+        ${params.dataScopeSnk}
+        order by a.create_time desc
+    </select>
+
+    <insert id="insertVisitCompany" parameterType="VisitCompany" useGeneratedKeys="true" keyProperty="id">
+        insert into snk_visit_company
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="leader != null and leader != ''">leader,</if>
+            <if test="leaderPhone != null and leaderPhone != ''">leader_phone,</if>
+            <if test="address != null and address != ''">address,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            create_time
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="leader != null and leader != ''">#{leader},</if>
+            <if test="leaderPhone != null and leaderPhone != ''">#{leaderPhone},</if>
+            <if test="address != null and address != ''">#{address},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            sysdate()
+         </trim>
+    </insert>
+
+    <update id="updateVisitCompany" parameterType="VisitCompany">
+        update snk_visit_company
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            leader = #{leader},
+            leader_phone = #{leaderPhone},
+            address = #{address},
+            update_by = #{updateBy},
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <select id="selectVisitCompanyById" parameterType="Long" resultMap="VisitCompanyResult">
+        <include refid="selectVisitCompanyVo"/>
+         where a.del_flag = '0'
+           and a.id = #{id}
+    </select>
+
+    <delete id="deleteVisitCompanyById" parameterType="Long">
+        update snk_visit_company set del_flag = '1' where id = #{id}
+    </delete>
+
+    <delete id="deleteVisitCompanyByIds" parameterType="String">
+        update snk_visit_company set del_flag = '1' where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

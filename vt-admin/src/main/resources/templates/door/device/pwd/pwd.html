@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="include :: header('开门密码信息列表')" />
+</head>
+<body class="gray-bg">
+    <div class="container-div">
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId1">
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>SN：</label>
+                                    <input type="text" name="sn"/>
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId1', 'bootstrap-table1');"><i class="fa fa-search"></i> 搜索</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table1"></table>
+                </div>
+            </div>
+
+            <div class="col-sm-8">
+                <div class="col-sm-12 search-collapse">
+                    <form id="formId2">
+                        <input id="sn" type="text" name="sn" hidden/>
+                        <div class="select-list">
+                            <ul>
+                                <li>
+                                    <label>设备名称：</label>
+                                    <input type="text" name="deviceName"/>
+                                </li>
+                                <li>
+                                    <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('formId2', 'bootstrap-table2')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+                <div class="btn-group-sm" id="toolbar2" role="group">
+                    <a id="add" class="btn btn-success disabled" onclick="add()" shiro:hasPermission="door:pwd:add">
+                        <i class="fa fa-plus"></i> 新增
+                    </a>
+                    <a class="btn btn-danger multiple disabled" onclick="deletePwd()" shiro:hasPermission="door:pwd:remove">
+                        <i class="fa fa-remove"></i> 删除
+                    </a>
+                    <a id="clear" class="btn btn-warning disabled" onclick="clearPwd()" shiro:hasPermission="door:pwd:clear">
+                        <i class="fa fa-trash"></i> 清空
+                    </a>
+                </div>
+                <div class="col-sm-12 select-table table-striped">
+                    <table id="bootstrap-table2"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <th:block th:include="include :: footer" />
+    <script th:inline="javascript">
+        var removeFlag = [[${@permission.hasPermi('door:pwd:remove')}]];
+        var prefix = ctx + "door/device/pwd";
+        var loginName = [[${@permission.getPrincipalProperty('loginName')}]];
+        var param;
+        var pwd = true;
+        var clear;
+        var tableId = "bootstrap-table2";
+
+        $(function() {
+            var options = {
+                id: "bootstrap-table1",
+                url: prefix + "/deviceList?deviceType=1",
+                showColumns: false,
+                showToggle: false,
+                clickToSelect: true,
+                modalName: "设备列表",
+                columns: [{
+                    field: 'state',
+                    radio: true
+                },
+                {
+                    field: 'sn',
+                    title: 'SN'
+                },
+                {
+                    field: 'model',
+                    title: '设备型号'
+                }],
+                onLoadSuccess: function(data) {
+                    if (data.total == 0) {
+                        $("#add").addClass("disabled", "disabled");
+                        $("#clear").addClass("disabled", "disabled");
+                    }
+                    $("#sn").val(null);
+                    $.table.search("formId2", "bootstrap-table2");
+                },
+                onClickRow: function (row) {
+                    $("#sn").val(row.sn);
+                    param = row;
+                    $("#add").removeClass("disabled");
+                    if (row.modelType == "1") { // 普通版
+                        $("#bootstrap-table2").bootstrapTable('hideColumn', 'openTimes');
+                        $("#bootstrap-table2").bootstrapTable('hideColumn', 'expiry');
+                    } else {
+                        $("#bootstrap-table2").bootstrapTable('showColumn', 'openTimes');
+                        $("#bootstrap-table2").bootstrapTable('showColumn', 'expiry');
+                    }
+                    $.table.search("formId2", "bootstrap-table2");
+                }
+            };
+            $.table.init(options);
+        });
+
+        $(function() {
+            var options = {
+                id: "bootstrap-table2",
+                toolbar: "toolbar2",
+                uniqueId: "id",
+                url: prefix + "/list",
+                updateUrl: prefix + "/edit/{id}",
+                removeUrl: prefix + "/remove",
+                showColumns: false,
+                showToggle: false,
+                clickToSelect: true,
+                modalName: "开门密码",
+                columns: [{
+                    field: 'state',
+                    checkbox: true
+                },
+                {
+                    field: 'deviceName',
+                    title: '设备名称'
+                },
+                {
+                    field: 'positionName',
+                    title: '安装位置'
+                },
+                {
+                    field: 'password',
+                    title: '密码'
+                },
+                {
+                    field: 'openTimes',
+                    title: '开门次数',
+                    formatter: function(value, row, index) {
+                        if ($.common.isEmpty(value)) {
+                            return "无限制";
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'expiry',
+                    title: '有效期',
+                    formatter: function(value, row, index) {
+                        if ($.common.isEmpty(value)) {
+                            return "无限制";
+                        }
+                        return value;
+                    }
+                },
+                {
+                    field: 'createBy',
+                    title: '创建者'
+                },
+                {
+                    field: 'createTime',
+                    title: '创建时间'
+                }],
+                onLoadSuccess: function(data) {
+                    if (data.total == 0) {
+                        $("#delTg").addClass("disabled", "disabled");
+                        $("#clear").addClass("disabled", "disabled");
+                    } else {
+                        $("#clear").removeClass("disabled");
+                    }
+                    if ($.common.isEmpty($("#sn").val())) {
+                        $("#add").addClass("disabled", "disabled");
+                    }
+                }
+            };
+            $.table.init(options);
+        });
+
+        function add() {
+            $.modal.open("添加开门密码", prefix + "/add/" + $("#sn").val());
+        }
+
+        function deletePwd() {
+            var rows = $("#bootstrap-table2").bootstrapTable("getSelections");
+            if (rows.length == 0) {
+                $.modal.alertError("请至少选择一条记录");
+                return;
+            }
+            var pwdList = [];
+            $.each(rows, function (index, obj) {
+                var pwd = {"sn": obj.sn,
+                    "deviceId": obj.deviceId,
+                    "password": obj.password,
+                    "openTimes": obj.openTimes,
+                    "expiry": obj.expiry,
+                    "createBy": loginName,
+                    "controlPort": obj.controlPort,
+                    "deviceName": obj.deviceName,
+                    "positionName": obj.positionName,
+                    "delFlag": "1"
+                };
+                pwdList.push(pwd);
+            });
+            clear = false;
+            param.param = pwdList;
+            operation("DELETE_PASSWORD");
+        }
+        
+        function clearPwd() {
+            $.modal.confirm("确认清空开门密码？", function() {    // 清空开门密码
+                clear = true;
+                param.param = null;
+                operation("CLEAR_PASSWORD_DATE_BASE");
+            });
+        }
+
+        function operation(operation) {
+            $.modal.open("操作记录", ctx + "door/device/custom?operation=" + operation, null, null, null, true);
+        }
+
+    </script>
+</body>
+</html>
