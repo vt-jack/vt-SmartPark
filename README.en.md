@@ -1,7 +1,7 @@
 # snk
 
 #### Description
-智慧塞宁后台管理系统
+智慧园区后台管理系统
 
 #### Software Architecture
 Software architecture description
