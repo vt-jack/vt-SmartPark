@@ -42,7 +42,7 @@
 
 QQ：  2772692077
 
-QQ 交流群：979943723
+QQ 交流群：979943723 ，进群获取数据库sql脚本！！！
 
 <a target="_blank" href="https://qm.qq.com/cgi-bin/qm/qr?k=0TtDhfhhKvJOkK8jCtJfaFB2CvM6EJne&jump_from=webapi"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="智慧园区" title="智慧园区"></a>
 
